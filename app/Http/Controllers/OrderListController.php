@@ -12,7 +12,7 @@ use App\Ingredient_stock;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //pake facades DB
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class OrderListController extends Controller //fix discount
 {
@@ -24,8 +24,9 @@ class OrderListController extends Controller //fix discount
         ->leftjoin('orders','orders.id','=','order_list.order_id')
         ->leftjoin('tables','tables.id','=','orders.table_id')
         ->where('orders.status','=','OPEN')
-        ->select('products.id as product_id','order_list.id as orderlist_id','orders.id as order_id','tables.id as table_id','tables.number as table_number','tables.extend as table_extend','orders.information as order_information','order_list.amount as total')   
-        ->get();    
+        ->where('order_list_status_id','=',1)
+        ->select('products.id as product_id','order_list.id as orderlist_id','orders.id as order_id','tables.id as table_id','tables.number as table_number','tables.extend as table_extend','orders.information as order_information','order_list.amount as total')
+        ->get();
 
         if($product_id){
             $out = [
@@ -42,7 +43,7 @@ class OrderListController extends Controller //fix discount
 
     public function updateorderlist(Request $request)
     {
-        $validator = Validator::make($request->all(), 
+        $validator = Validator::make($request->all(),
         [
             'token' => 'required',
             'order_id' => 'required|integer',
@@ -52,7 +53,7 @@ class OrderListController extends Controller //fix discount
             'order_list_status_id' => 'nullable|array'
         ]);
         $messages = $validator->errors();
-        if ($validator->fails()) 
+        if ($validator->fails())
         {
             //request tidak sempurna (ada yang kosong)
             $out = [
@@ -65,12 +66,12 @@ class OrderListController extends Controller //fix discount
         DB::beginTransaction();
         try{
             //initialize
-            $token = $request->input('token'); 
+            $token = $request->input('token');
             $user_id = User::where('token','=',$token)->max('id');
             $order_id = $request->input('order_id');
             $note = $request->input('note');
             $product_id = $request->input('product_id');
-            $product_id_count = count($product_id); 
+            $product_id_count = count($product_id);
             $amount = $request->input('amount');
             $order_list_status_id = $request->input('order_list_status_id');
 
@@ -79,15 +80,15 @@ class OrderListController extends Controller //fix discount
                 'user_id' => $user_id,
                 'note' => $note
             ];
-            $updateorder = Order::where('id','=',$order_id)->update($dataorder);
+            Order::where('id','=',$order_id)->update($dataorder);
 
             //clearing old orderlist
-            $order_list = Order_list::where('order_id','=',$order_id)
+            Order_list::where('order_id','=',$order_id)
             ->where('order_list_status_id','!=',4)
             ->delete();
 
             //making new orderlist
-            for($i=0; $i < $product_id_count; $i++) 
+            for($i=0; $i < $product_id_count; $i++)
             {
                 $data = [
                     'order_id' => $order_id,
@@ -107,13 +108,13 @@ class OrderListController extends Controller //fix discount
                     'status' => 'CLOSED'
                 ];
                 Order::where('id','=',$order_id)->update($dataorder);
-            } 
-            
+            }
+
 
             DB::commit();
             $out  = [
                 "message" => "Update - OrderList - Success"
-            ];               
+            ];
             return response()->json($out,200);
 
         }catch (\exception $e) { //database tidak bisa diakses
@@ -121,7 +122,7 @@ class OrderListController extends Controller //fix discount
             $message = $e->getmessage();
             $out  = [
                 "message" => $message
-            ];  
+            ];
             return response()->json($out,200);
         };
     }
@@ -133,7 +134,7 @@ class OrderListController extends Controller //fix discount
             'order_list_status_id' => 'required|integer'
         ]);
         $messages = $validator->errors();
-        if ($validator->fails()) 
+        if ($validator->fails())
         {
             $out = [
                 "message" => $messages->first()
@@ -147,7 +148,7 @@ class OrderListController extends Controller //fix discount
             $product_id = Order_list::where('id','=',$orderlist_id)->max('product_id');
             $order_list_amount = Order_list::where('id','=',$orderlist_id)->max('amount');
             $orderlistlist =  Order_list::where('id','=',$orderlist_id)->first();
-    
+
             if (!$orderlistlist) {
                 $data = [
                     "message" => "error / data not found"
@@ -197,9 +198,9 @@ class OrderListController extends Controller //fix discount
             $message = $e->getmessage();
             $out  = [
                 "message" => $message
-            ];  
+            ];
             return response()->json($out,200);
-        };          
+        };
     }
 
     public function updateolsbyproductid(Request $request)
@@ -209,7 +210,7 @@ class OrderListController extends Controller //fix discount
             'product_id' => 'required|integer'
         ]);
         $messages = $validator->errors();
-        if ($validator->fails()) 
+        if ($validator->fails())
         {
             $out = [
                 "message" => $messages->first()
@@ -238,9 +239,9 @@ class OrderListController extends Controller //fix discount
             $message = $e->getmessage();
             $out  = [
                 "message" => $message
-            ];  
+            ];
             return response()->json($out,200);
-        };          
+        };
     }
 
     public function destroy($id)
@@ -249,7 +250,7 @@ class OrderListController extends Controller //fix discount
         try {
             $order_id = Order_list::where('id','=',$id)->max('order_id');
             $orderlistlist =  Order_list::where('id','=',$id)->first();
-    
+
             if (!$orderlistlist) {
                 $data = [
                     "message" => "error / data not found"
@@ -276,8 +277,8 @@ class OrderListController extends Controller //fix discount
             $message = $e->getmessage();
             $out  = [
                 "message" => $message
-            ];  
+            ];
             return response()->json($out,200);
-        };      
+        };
     }
 }

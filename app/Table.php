@@ -17,7 +17,7 @@ class Table extends Model implements AuthenticatableContract, AuthorizableContra
     ];
 
     protected $hidden = [
-        
+
     ];
 
-}   
+}

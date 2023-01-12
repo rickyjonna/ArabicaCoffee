@@ -5,21 +5,21 @@ namespace App\Http\Controllers;
 use App\Partner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //pake facades DB
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class PartnerController extends Controller
 {
     public function insertpartner(Request $request)
     {
-        if ($request->isMethod('post')) 
+        if ($request->isMethod('post'))
         {
-            $validator = Validator::make($request->all(), 
+            $validator = Validator::make($request->all(),
             [
                 'owner' => 'required|unique:partners|max:30',
-                'profit' => 'required|max:4'                
+                'profit' => 'required|max:4'
             ]);
             $messages = $validator->errors();
-            if ($validator->fails()) 
+            if ($validator->fails())
             {
                 $out = [
                     "message" => $messages->first(),
@@ -32,12 +32,12 @@ class PartnerController extends Controller
             try {
                 //initialize
                 $owner = $request->input('owner');
-                $profit = $request->input('profit');       //janganlupa  ubah  profit ke bentuk non %    
+                $profit = $request->input('profit');       //janganlupa  ubah  profit ke bentuk non %
 
                 //making partner
                 $data = [
                     'owner' => $owner,
-                    'profit' => $profit         
+                    'profit' => $profit
                 ];
                 $insert = Partner::create($data);
                 DB::commit();
@@ -51,7 +51,7 @@ class PartnerController extends Controller
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
             };
         }
@@ -59,7 +59,7 @@ class PartnerController extends Controller
 
     public function index()
     {
-        $getPost = Partner::Select('owner as Rekan', 'profit as Profit') 
+        $getPost = Partner::Select('owner as Rekan', 'profit as Profit')
         ->OrderBy("id", "DESC")
         ->get();
 
@@ -73,12 +73,12 @@ class PartnerController extends Controller
 
     public function updatepartner($id, Request $request)
     {
-        if ($request->isMethod('post')) 
+        if ($request->isMethod('post'))
         {
-            $validator = Validator::make($request->all(), 
+            $validator = Validator::make($request->all(),
             [
                 'owner' => 'required|max:30',
-                'profit' => 'required|max:4' 
+                'profit' => 'required|max:4'
             ]);
             $messages = $validator->errors();
             if ($validator->fails()) {
@@ -93,7 +93,7 @@ class PartnerController extends Controller
             try {
                 //initialize
                 $owner = $request->input('owner');
-                $profit = $request->input('profit'); 
+                $profit = $request->input('profit');
 
                 //updating old partner
                 $oldpartner = Partner::where('id','=',$id);
@@ -113,9 +113,9 @@ class PartnerController extends Controller
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
-            };       
+            };
         };
     }
 

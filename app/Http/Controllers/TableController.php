@@ -5,20 +5,20 @@ namespace App\Http\Controllers;
 use App\Table;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //pake facades DB
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class TableController extends Controller
 {
     public function inserttable(Request $request)
     {
-        if ($request->isMethod('post')) 
+        if ($request->isMethod('post'))
         {
             $validator = Validator::make($request->all(), [
                 'number' => 'required|integer',
-                'extend' => 'required|integer'                
+                'extend' => 'required|integer'
             ]);
             $messages = $validator->errors();
-            if ($validator->fails()) 
+            if ($validator->fails())
             {
                 $out = [
                     "message" => $messages->first(),
@@ -29,8 +29,8 @@ class TableController extends Controller
             DB::beginTransaction();
             try {
                 //initialize
-                $number = $request->input('number');      
-                $extend = $request->input('extend'); 
+                $number = $request->input('number');
+                $extend = $request->input('extend');
 
                 //making Table
                 $data = [
@@ -50,7 +50,7 @@ class TableController extends Controller
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
             };
         };
@@ -58,15 +58,15 @@ class TableController extends Controller
 
     public function updatetable($id, Request $request)
     {
-        if ($request->isMethod('post')) 
+        if ($request->isMethod('post'))
         {
-            $validator = Validator::make($request->all(), 
+            $validator = Validator::make($request->all(),
             [
                 'number' => 'required|integer',
-                'extend' => 'required|integer'  
+                'extend' => 'required|integer'
             ]);
             $messages = $validator->errors();
-            if ($validator->fails()) 
+            if ($validator->fails())
             {
                 $out = [
                     "message" => $messages->first(),
@@ -79,7 +79,7 @@ class TableController extends Controller
             try {
                 //initialize
                 $number = $request->input('number');
-                $extend = $request->input('extend'); 
+                $extend = $request->input('extend');
 
 
                 //updating old Table
@@ -100,7 +100,7 @@ class TableController extends Controller
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
             };
         };
@@ -108,7 +108,7 @@ class TableController extends Controller
 
     public function index()
     {
-        $getPost = Table::Select('id','number', 'extend', 'status') 
+        $getPost = Table::Select('id','number', 'extend', 'status')
         ->OrderBy("number", "ASC")
         ->get();
 

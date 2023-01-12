@@ -8,27 +8,27 @@ use App\Table;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //pake facades DB
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class OrderController extends Controller
 {
-        public function insertorder(Request $request)
+    public function insertorder(Request $request)
     {
-        if ($request->isMethod('post')) 
+        if ($request->isMethod('post'))
         {
-            $validator = Validator::make($request->all(), 
+            $validator = Validator::make($request->all(),
             [
                 'token' => 'required',
                 'merchant_id' => 'required|integer',
-                'product_id' => 'required|array',           
+                'product_id' => 'required|array',
                 'amount' => 'required|array',
                 'table_id' => 'nullable|integer|unique:orders',
-                'vendor_id' => 'nullable|integer',
+                'agent_id' => 'nullable|integer',
                 'information' => 'nullable',
                 'note' => 'nullable'
             ]);
             $messages = $validator->errors();
-            if ($validator->fails()) 
+            if ($validator->fails())
             {
                 //request tidak sempurna (ada yang kosong)
                 $out = [
@@ -40,15 +40,15 @@ class OrderController extends Controller
             DB::beginTransaction();
             try{
                 //initialize
-                $token = $request->input('token'); 
+                $token = $request->input('token');
                 $user_id = User::where('token','=',$token)->max('id');
                 $merchant_id = $request->input('merchant_id');
-                $table_id = $request->input('table_id');         
-                $vendor_id = $request->input('vendor_id');  
-                $information = $request->input('information');  
+                $table_id = $request->input('table_id');
+                $agent_id = $request->input('agent_id');
+                $information = $request->input('information');
                 $product_id = $request->input('product_id');
-                $product_id_count = count($product_id); 
-                $amount = $request->input('amount'); 
+                $product_id_count = count($product_id);
+                $amount = $request->input('amount');
                 $note = $request->input('note');
 
                 //changing table status
@@ -63,18 +63,18 @@ class OrderController extends Controller
                     'merchant_id' => $merchant_id,
                     'table_id' => $table_id,
                     'user_id' => $user_id,
-                    'vendor_id' => $vendor_id,
+                    'agent_id' => $agent_id,
                     'status' => "OPEN",
                     'information' => $information,
                     'note' => $note
                 ];
-                $insert = Order::create($data);
+                Order::create($data);
 
                 //get the order_id
                 $order_id = Order::max('id');
 
                 //making Order list
-                for($i=0; $i < $product_id_count; $i++) 
+                for($i=0; $i < $product_id_count; $i++)
                 {
                     $data = [
                         'order_id' => $order_id,
@@ -84,13 +84,13 @@ class OrderController extends Controller
                         'order_list_status_id' => 1,
                         'amount' => $amount[$i]
                     ];
-                    $insert = Order_list::create($data);
+                    Order_list::create($data);
                 };
 
                 DB::commit();
                 $out  = [
                     "message" => "Order Telah Dibuat"
-                ];               
+                ];
                 return response()->json($out,200);
 
             }catch (\exception $e) { //database tidak bisa diakses
@@ -98,7 +98,7 @@ class OrderController extends Controller
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
             };
         };
@@ -115,25 +115,24 @@ class OrderController extends Controller
         ->addselect('orders.id as order_id')
         ->addselect('orders.note as order_note')
         ->get();
-        // masih 2 vendor
         $gojek = Order::where('orders.status', "=", "OPEN")
-        ->where('orders.vendor_id','=',2)
-        ->leftjoin('vendors','vendors.id','=','orders.vendor_id')       
+        ->where('orders.agent_id','=',2)
+        ->leftjoin('agents','agents.id','=','orders.agent_id')
         ->orderby('orders.id',"ASC")
         ->addselect('information')
         ->addselect('orders.id as order_id')
         ->addselect('orders.note as order_note')
         ->get();
         $grab = Order::where('orders.status', "=", "OPEN")
-        ->where('orders.vendor_id','=',1)
-        ->leftjoin('vendors','vendors.id','=','orders.vendor_id')       
+        ->where('orders.agent_id','=',3)
+        ->leftjoin('agents','agents.id','=','orders.agent_id')
         ->orderby('orders.id',"ASC")
         ->addselect('information')
         ->addselect('orders.id as order_id')
         ->addselect('orders.note as order_note')
         ->get();
         $takeaway = Order::where('orders.status', "=", "OPEN")
-        ->where('orders.vendor_id','=',null)
+        ->where('orders.agent_id','=',1)
         ->where('orders.information','!=',null)
         ->addselect('information')
         ->addselect('orders.id as order_id')

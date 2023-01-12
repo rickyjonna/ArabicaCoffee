@@ -7,7 +7,7 @@ use App\Invoice;
 use App\Order_list;
 use App\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; //pake facades DB
+use Illuminate\Support\Facades\Validator; //pake facades DB
 
 class IncomeController extends Controller
 {
@@ -28,7 +28,7 @@ class IncomeController extends Controller
 
         return response()->json($out, 200);
     }
-    
+
     public function destroy($id)
     {
         $income =  Income::where('id','=',$id)->first();

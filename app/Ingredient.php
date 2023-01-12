@@ -13,11 +13,11 @@ class Ingredient extends Model implements AuthenticatableContract, AuthorizableC
     use Authenticatable, Authorizable;
 
     protected $fillable = [
-        'id', 'merchant_id', 'name', 'unit'
+        'id','merchant_id', 'name', 'unit'
     ];
 
     protected $hidden = [
-        
+
     ];
 
 }

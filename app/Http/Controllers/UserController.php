@@ -6,7 +6,7 @@ use App\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;//pake facades DB
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -21,12 +21,12 @@ class UserController extends Controller
             "message" => "List User",
             "results" => $getListUser
         ];
-        return response()->json($out, 200);        
+        return response()->json($out, 200);
     }
 
     public function update($id, Request $request)
     {
-        $validator = Validator::make($request->all(), 
+        $validator = Validator::make($request->all(),
         [
             'user_type_id' => 'required',
             'phone_number' => 'required',
@@ -34,28 +34,28 @@ class UserController extends Controller
             'address' => 'required'
         ]);
         $messages = $validator->errors();
-        if ($validator->fails()) 
+        if ($validator->fails())
         {
             $out = [
                 "message" => $messages->first(),
                 "code"   => 200
             ];
             return response()->json($out, $out['code']);
-        };   
+        };
 
         DB::beginTransaction();
             try {//initialize
                 $user_type_id = $request->input('user_type_id');
                 $phone_number = $request->input('phone_number');
-                $name = $request->input('name');   
-                $address = $request->input('address');   
-                //updating 
+                $name = $request->input('name');
+                $address = $request->input('address');
+                //updating
                 $olduser = User::where('id','=',$id)->first();
                 $newdatauser = [
                     'user_type_id' => $user_type_id,
-                    'phone_number' => $phone_number,             
+                    'phone_number' => $phone_number,
                     'name' => $name,
-                    'address' => $address      
+                    'address' => $address
                 ];
                 $update_user = $olduser -> update($newdatauser);
                 DB::commit();
@@ -69,9 +69,9 @@ class UserController extends Controller
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
-        };      
+        };
     }
 
     public function destroy($id)

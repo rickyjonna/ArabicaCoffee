@@ -13,11 +13,11 @@ class Income extends Model implements AuthenticatableContract, AuthorizableContr
     use Authenticatable, Authorizable;
 
     protected $fillable = [
-        'merchant_id','income_type_id', 'invoice_id', 'total', 'information'
+        'id', 'merchant_id','income_type_id', 'invoice_id', 'total', 'information'
     ];
 
     protected $hidden = [
-        'id'
+
     ];
 
 }

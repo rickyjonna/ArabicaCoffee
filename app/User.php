@@ -16,5 +16,6 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
         'id','user_type_id','merchant_id','name', 'password', 'address', 'phone_number', 'token'
     ];
     protected $hidden = [
+
     ];
 }

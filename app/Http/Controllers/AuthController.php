@@ -8,7 +8,8 @@ use App\Ingredient_stock;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\MessageBag;
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -61,8 +62,8 @@ class AuthController extends Controller
             $out = [
                 "message" => $errormessage
             ];
-            return response()->json($out, 200); 
-        };  
+            return response()->json($out, 200);
+        };
     }
 
     public function login(Request $request)
@@ -112,10 +113,10 @@ class AuthController extends Controller
         }catch (\exception $e) {
             DB::rollback();
             $message = $e->getmessage();
-            $errormessage = substr($errormessage, 22, 75);
+            $errormessage = substr($message, 22, 75);
             $out  = [
                 "message" => $errormessage
-            ];  
+            ];
             return response()->json($out,200);
         };
     }
@@ -136,20 +137,20 @@ class AuthController extends Controller
                 return response()->json($out, 200);
             };
             //initialize
-            $token = $request->input('token'); 
+            $token = $request->input('token');
             $user = User::where('token','=',$token)->first();
             $password = $request->input('password');
-            $newpassword = $request->input('newpassword'); 
-            $hashnewpwd = Hash::make($newpassword);         
-            //updating 
+            $newpassword = $request->input('newpassword');
+            $hashnewpwd = Hash::make($newpassword);
+            //updating
             if(!$user){
                 $out  = [
-                    "message" => "Harap Login Ulang"                  
+                    "message" => "Harap Login Ulang"
                 ];
                 return response()->json($out, 200);
             };
             if (Hash::check($password, $user->password)) {
-            
+
                 $user->update(['password' => $hashnewpwd]);
                 $out = [
                     "message" => "Ubah Password Berhasil"
@@ -167,12 +168,12 @@ class AuthController extends Controller
             $out = [
                 "message" => $errormessage
             ];
-            return response()->json($out, 200); 
-        };  
+            return response()->json($out, 200);
+        };
     }
 
     public function logout(Request $request)
-    {   
+    {
         $validator = Validator::make($request->all(), [
             'token' => 'required'
         ]);
@@ -189,7 +190,7 @@ class AuthController extends Controller
                 $out = [
                     "message" => "Anda Sudah Logout"
                 ];
-                return response()->json($out, 200); 
+                return response()->json($out, 200);
             } else {
                 $emptytoken = [
                         "token" => null
@@ -198,7 +199,7 @@ class AuthController extends Controller
                 $out = [
                     "message" => "Logout - Success"
                     ];
-                return response()->json($out, 200); 
+                return response()->json($out, 200);
             };
         } catch (\exception $e){
             $errormessage = $e->getmessage();
@@ -206,8 +207,8 @@ class AuthController extends Controller
             $out = [
                 "message" => $errormessage
             ];
-            return response()->json($out, 200); 
-        };  
+            return response()->json($out, 200);
+        };
     }
 
     function generateRandomString($length = 80)

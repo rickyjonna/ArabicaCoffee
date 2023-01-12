@@ -5,21 +5,21 @@ namespace App\Http\Controllers;
 use App\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //pake facades DB
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class PaymentController extends Controller
 {
     public function insertpayment(Request $request)
     {
-        if ($request->isMethod('post')) 
+        if ($request->isMethod('post'))
         {
-            $validator = Validator::make($request->all(), 
+            $validator = Validator::make($request->all(),
             [
                 'information' => 'required|max:30',
                 'discount' => 'required|max:4'
             ]);
             $messages = $validator->errors();
-            if ($validator->fails()) 
+            if ($validator->fails())
             {
                 $out = [
                     "message" => $messages->first(),
@@ -32,9 +32,9 @@ class PaymentController extends Controller
             try {
                 //initialize
                 $information = $request->input('information');
-                $discount = $request->input('discount');           
+                $discount = $request->input('discount');
 
-                //making vendor
+                //making agent
                 $data = [
                     'information' => $information,
                     'discount' => $discount
@@ -51,7 +51,7 @@ class PaymentController extends Controller
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
             };
         };
@@ -73,15 +73,15 @@ class PaymentController extends Controller
 
     public function updatepayment($id, Request $request)
     {
-        if ($request->isMethod('post')) 
+        if ($request->isMethod('post'))
         {
-            $validator = Validator::make($request->all(), 
+            $validator = Validator::make($request->all(),
             [
                 'information' => 'required|max:30',
                 'discount' => 'required|max:4'
             ]);
             $messages = $validator->errors();
-            if ($validator->fails()) 
+            if ($validator->fails())
             {
                 $out = [
                     "message" => $messages->first(),
@@ -94,13 +94,13 @@ class PaymentController extends Controller
             try {
                 //initialize
                 $information = $request->input('information');
-                $discount = $request->input('discount');   
+                $discount = $request->input('discount');
 
                 //updating payment
                 $oldpayment = Payment::where('id','=',$id);
                 $data = [
-                    'information' => $information,             
-                    'discount' => $discount            
+                    'information' => $information,
+                    'discount' => $discount
                 ];
                 $updatepayment = $oldpayment -> update($data);
                 DB::commit();
@@ -114,12 +114,12 @@ class PaymentController extends Controller
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
             };
         };
     }
-    
+
     public function destroy($id)
     {
         $payment =  Payment::where('id','=',$id)->first();

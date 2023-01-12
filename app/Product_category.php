@@ -15,9 +15,9 @@ class Product_category extends Model implements AuthenticatableContract, Authori
     protected $table = "product_category";
 
     protected $fillable = [
-        'id','information','created_at', 'updated_at'
+        'id', 'information'
     ];
 
     protected $hidden = [
     ];
-}   
+}

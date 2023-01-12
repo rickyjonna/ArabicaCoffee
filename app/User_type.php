@@ -13,12 +13,12 @@ class User_type extends Model implements AuthenticatableContract, AuthorizableCo
     use Authenticatable, Authorizable;
 
     protected $table = "user_type";
-    
+
     protected $fillable = [
-        'id', 'information'
+        'id','information'
     ];
 
     protected $hidden = [
-        
+
     ];
 }

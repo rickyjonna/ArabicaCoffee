@@ -15,10 +15,10 @@ class Product_stock extends Model implements AuthenticatableContract, Authorizab
     protected $table = "product_stock";
 
     protected $fillable = [
-        'id','merchant_id', 'product_id', 'amount','minimum_amount'
+        'merchant_id', 'product_id', 'amount','minimum_amount', 'unit'
     ];
 
     protected $hidden = [
-        
+
     ];
 }

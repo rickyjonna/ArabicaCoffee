@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Product_formula;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //pake facades DB
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class ProductFormulaController extends Controller
 {
@@ -18,7 +18,7 @@ class ProductFormulaController extends Controller
     {
         $getPost = Product_formula::leftjoin('products', 'products.id', '=', 'product_formula.product_id')
         ->leftjoin('ingredients','ingredients.id', '=', 'product_formula.ingredient_id')
-        ->addselect('products.name as Produk', 'ingredients.name as Bahan','amount as Jumlah') 
+        ->addselect('products.name as Produk', 'ingredients.name as Bahan','amount as Jumlah')
         ->OrderBy("product_formula.id", "ASC")
         ->get();
 
@@ -31,9 +31,9 @@ class ProductFormulaController extends Controller
 
     public function updateformula($id, Request $request)
     {
-        if ($request->isMethod('patch')) 
+        if ($request->isMethod('patch'))
         {
-            $validator = Validator::make($request->all(), 
+            $validator = Validator::make($request->all(),
             [
                 'amount' => 'required|integer'
             ]);
@@ -49,7 +49,7 @@ class ProductFormulaController extends Controller
             DB::beginTransaction();
             try {
                 //initialize
-                $amount = $request->input('amount'); 
+                $amount = $request->input('amount');
 
                 //updating old formula
                 $oldformula = Product_formula::where("id","=",$id);
@@ -62,8 +62,8 @@ class ProductFormulaController extends Controller
                     "message" => "Formula Telah Diperbaharui",
                     "code"  => 200
                 ];
-                return response()->json($out, $out['code']);        
-            }catch(\eception $e){
+                return response()->json($out, $out['code']);
+            }catch(\exception $e){
                 DB::rollback();
                 $errorcode = $e->getcode();
                 $message = $e->getmessage();
@@ -78,7 +78,7 @@ class ProductFormulaController extends Controller
                         "code" => 400
                     ];
                 };
-                return response()->json($out,$out['code']);  
+                return response()->json($out,$out['code']);
             };
         };
     }

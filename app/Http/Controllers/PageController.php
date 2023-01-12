@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Vendor;
+use App\Agent;
 use App\User;
 use App\User_type;
 use App\Invoice;
@@ -19,7 +19,6 @@ use App\Table;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use Illuminate\Support\MessageBag;
-use Validator, Input, Redirect;
 use Illuminate\Support\Facades\DB; //pake facades DB
 
 class PageController extends Controller
@@ -37,7 +36,7 @@ class PageController extends Controller
             ->get();
             $today_income = Invoice::where('status','=','PAID')
             ->whereraw('Date(updated_at) = CURDATE()')
-            ->sum('total'); 
+            ->sum('total');
             $user_active = User::where('token', '!=', null)
             ->get('name');
             $product_minimum = Product_stock::leftjoin('products', 'products.id', '=', 'product_stock.product_id')
@@ -111,7 +110,6 @@ class PageController extends Controller
             ->select('order_list.product_id','products.name as product_name','order_list.amount as product_total')
             ->selectRaw('price - price*discount/100 as product_totalprice')
             ->addselect('order_list_status.id as orderlist_status_id','order_list_status.information as orderlist_status', 'order_list.id as orderlist_id')
-            ->where('order_list_status_id','!=',4)
             ->get();
 
         $order_list_all = Order_list::where('order_id','=',$id)
@@ -140,6 +138,7 @@ class PageController extends Controller
         //listorder
         $table = Order::leftjoin('tables', 'tables.id', '=', 'orders.table_id')
         ->where('orders.status', "=", "OPEN")
+        ->where('orders.agent_id','=',1)
         ->where('orders.table_id','!=',null)
         ->OrderBy("orders.id", "ASC")
         ->addselect('tables.id as table_id')
@@ -147,38 +146,38 @@ class PageController extends Controller
         ->addselect('orders.id as order_id')
         ->addselect('orders.note as order_note')
         ->get();
-        // masih 2 vendor
+        // masih 2 agent
         $gojek = Order::where('orders.status', "=", "OPEN")
-        ->where('orders.vendor_id','=',2)
-        ->leftjoin('vendors','vendors.id','=','orders.vendor_id')       
+        ->where('orders.agent_id','=',2)
+        ->leftjoin('agents','agents.id','=','orders.agent_id')
         ->orderby('orders.id',"ASC")
         ->addselect('information')
         ->addselect('orders.id as order_id')
         ->addselect('orders.note as order_note')
         ->get();
         $grab = Order::where('orders.status', "=", "OPEN")
-        ->where('orders.vendor_id','=',1)
-        ->leftjoin('vendors','vendors.id','=','orders.vendor_id')       
+        ->where('orders.agent_id','=',3)
+        ->leftjoin('agents','agents.id','=','orders.agent_id')
         ->orderby('orders.id',"ASC")
         ->addselect('information')
         ->addselect('orders.id as order_id')
         ->addselect('orders.note as order_note')
         ->get();
         $takeaway = Order::where('orders.status', "=", "OPEN")
-        ->where('orders.vendor_id','=',null)
+        ->where('orders.agent_id','=',1)
         ->where('orders.information','!=',null)
         ->addselect('information')
         ->addselect('orders.id as order_id')
         ->addselect('orders.note as order_note')
         ->get();
-    
+
         //productordered list
         $productordered_list = Order_list::where('order_list.order_list_status_id','=',1) //??
         ->leftjoin('products','products.id','=','order_list.product_id')
         ->select('products.id as product_id','products.name as product_name',DB::raw('SUM(order_list.amount) as product_total'))
         ->groupBy('products.id','products.name')
         ->get();
-        
+
         //out
         $order_list = [
             "table" => $table,
@@ -213,30 +212,30 @@ class PageController extends Controller
         ->addselect('orders.id as order_id')
         ->addselect('invoices.status')
         ->get();
-        // masih 2 vendor
-        $gojek = Order::where('orders.vendor_id','=',2)
-        ->leftjoin('vendors','vendors.id','=','orders.vendor_id')
+        // masih 2 agent
+        $gojek = Order::where('orders.agent_id','=',2)
+        ->leftjoin('agents','agents.id','=','orders.agent_id')
         ->leftjoin('invoices','invoices.order_id', '=', 'orders.id')
         ->where(function($query){
             $query->where('invoices.status','=','UNPAID')
                   ->orWhere('invoices.status','=',null);
-        })       
+        })
         ->orderby('orders.id',"ASC")
         ->addselect('information')
         ->addselect('orders.id as order_id')
         ->get();
-        $grab = Order::where('orders.vendor_id','=',1)
-        ->leftjoin('vendors','vendors.id','=','orders.vendor_id')
+        $grab = Order::where('orders.agent_id','=',3)
+        ->leftjoin('agents','agents.id','=','orders.agent_id')
         ->leftjoin('invoices','invoices.order_id', '=', 'orders.id')
         ->where(function($query){
             $query->where('invoices.status','=','UNPAID')
                   ->orWhere('invoices.status','=',null);
-        })       
+        })
         ->orderby('orders.id',"ASC")
         ->addselect('information')
         ->addselect('orders.id as order_id')
         ->get();
-        $takeaway = Order::where('orders.vendor_id','=',null)
+        $takeaway = Order::where('orders.agent_id','=',1)
         ->where('orders.information','!=',null)
         ->leftjoin('invoices','invoices.order_id', '=', 'orders.id')
         ->where(function($query){
@@ -249,7 +248,7 @@ class PageController extends Controller
         $payment = Payment::select("id","information","discount")
         ->orderby('id', "DESC")
         ->get();
-        
+
         //out
         $order_list = [
             "table" => $table,
@@ -270,13 +269,13 @@ class PageController extends Controller
         ->leftjoin('product_category', 'products.product_category_id', '=', 'product_category.id')
         ->addselect('products.id','products.name', 'products.price')
         ->addselect('discount')
-        ->selectRaw('price - price*discount/100 as total_price')
+        ->selectRaw('price - discount as total_price')
         ->addselect(DB::raw('(CASE WHEN amount is null THEN null ELSE amount END) as total_stock'))
-        ->addselect('product_category.information as category') 
+        ->addselect('product_category.information as category')
         ->where("products.editable", "=", "1")
         ->OrderBy("products.id", "ASC")
         ->get();
-        
+
         $out = [
             "message" => "Page - Product - Success",
             "results" => $productlist
@@ -285,17 +284,17 @@ class PageController extends Controller
     }
 
     public function addproduct(){
-    
+
         $category = Product_category::select('id','information')
         ->get();
-        $vendor = Vendor::select('id','name')
+        $agent = Agent::select('id','name')
         ->get();
-        $partner =  Partner::select('id', 'owner', 'profit')
+        $partner =  Partner::select('id', 'owner', 'percentage')
         ->get();
-        
+
         $results = [
             "category" => $category,
-            "vendor" => $vendor,
+            "agent" => $agent,
             "partner" => $partner
         ];
 
@@ -307,9 +306,9 @@ class PageController extends Controller
     }
 
     public function productcategory(){
-    
+
         $productcategory = Product_category::get();
-        
+
         $results = [
             "productcategory" => $productcategory
         ];
@@ -322,13 +321,13 @@ class PageController extends Controller
     }
 
     public function agent(){
-    
-        $agent = Vendor::leftjoin('payments','payments.id','=','vendors.payment_id')
-        ->select('vendors.id','payment_id','payments.information as payment_information','name','percentage')
+
+        $agent = Agent::leftjoin('payments','payments.id','=','agents.payment_id')
+        ->select('agents.id','payment_id','payments.information as payment_information','name','percentage')
         ->get();
         $payment = Payment::select('id','information','discount')
         ->get();
-        
+
         $results = [
             "agent" => $agent,
             "payment" => $payment
@@ -342,10 +341,10 @@ class PageController extends Controller
     }
 
     public function partner(){
-    
+
         $partner = Partner::select('id','owner','profit')
         ->get();
-        
+
         $results = [
             "partner" => $partner
         ];
@@ -358,10 +357,10 @@ class PageController extends Controller
     }
 
     public function table(){
-    
+
         $table = Table::select('id','number','extend')
         ->get();
-        
+
         $results = [
             "table" => $table
         ];
@@ -374,11 +373,11 @@ class PageController extends Controller
     }
 
     public function ingredient(){
-    
+
         $ingredient = Ingredient::leftjoin('ingredient_stock','ingredients.id','=','ingredient_stock.ingredient_id')
         ->select('ingredients.id','ingredients.name','ingredients.unit','ingredient_stock.amount','ingredient_stock.minimum_amount')
         ->get();
-        
+
         $results = [
             "ingredient" => $ingredient
         ];
@@ -391,10 +390,10 @@ class PageController extends Controller
     }
 
     public function payment(){
-    
+
         $payment = Payment::select('id','information','discount')
         ->get();
-        
+
         $results = [
             "payment" => $payment
         ];
@@ -407,13 +406,13 @@ class PageController extends Controller
     }
 
     public function user(){
-    
+
         $user = User::leftjoin('user_type','users.user_type_id','=','user_type.id')
         ->select('users.id as user_id','users.user_type_id','user_type.information as user_type','users.phone_number','users.name','users.address','users.password')
         ->get();
 
         $user_type = User_type::get();
-        
+
         $results = [
             "user" => $user,
             "user_type" => $user_type

@@ -5,19 +5,19 @@ namespace App\Http\Controllers;
 use App\Product_category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //pake facades DB
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class ProductCategoryController extends Controller
 {
     public function insertproductcategory(Request $request)
     {
-        if ($request->isMethod('post')) 
+        if ($request->isMethod('post'))
         {
             $validator = Validator::make($request->all(), [
-                'information' => 'required||unique:product_category'         
+                'information' => 'required||unique:product_category'
             ]);
             $messages = $validator->errors();
-            if ($validator->fails()) 
+            if ($validator->fails())
             {
                 $out = [
                     "message" => $messages->first(),
@@ -29,7 +29,7 @@ class ProductCategoryController extends Controller
             DB::beginTransaction();
             try {
                 //initialize
-                $information = $request->input('information'); 
+                $information = $request->input('information');
 
                 //making Table
                 $data = [
@@ -47,7 +47,7 @@ class ProductCategoryController extends Controller
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
             };
         };
@@ -68,13 +68,13 @@ class ProductCategoryController extends Controller
 
     public function updateproductcategory($id, Request $request)
     {
-        if ($request->isMethod('post')) 
+        if ($request->isMethod('post'))
         {
             $validator = Validator::make($request->all(), [
                 'information' => 'required'
             ]);
             $messages = $validator->errors();
-            if ($validator->fails()) 
+            if ($validator->fails())
             {
                 $out = [
                     "message" => $messages->first(),
@@ -98,13 +98,13 @@ class ProductCategoryController extends Controller
                     "message" => "EditProductCategory - Success",
                     "code"  => 200
                 ];
-                return response()->json($out, $out['code']);     
+                return response()->json($out, $out['code']);
             }catch (\exception $e) { //database tidak bisa diakses
                 DB::rollback();
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
             };
         };

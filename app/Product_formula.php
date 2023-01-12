@@ -15,11 +15,11 @@ class Product_formula extends Model implements AuthenticatableContract, Authoriz
     protected $table = "product_formula";
 
     protected $fillable = [
-        'merchant_id','product_id', 'ingredient_id', 'amount'
+        'id', 'merchant_id','product_id', 'ingredient_id', 'amount'
     ];
 
     protected $hidden = [
-        'id'
+
     ];
 
 }

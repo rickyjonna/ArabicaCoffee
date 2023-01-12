@@ -6,21 +6,22 @@ use App\Ingredient;
 use App\Ingredient_stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class IngredientController extends Controller
 {
     public function insertingredient(Request $request)
     {
-        $validator = Validator::make($request->all(), 
+        $validator = Validator::make($request->all(),
             [
+                'merchant_id' => 'required',
                 'name' => 'required|unique:ingredients|max:255',
                 'unit' => 'required|max:255',
                 'amount' => 'required|integer',
                 'minimum_amount' =>'required|integer'
             ]);
         $messages = $validator->errors();
-        if ($validator->fails()) 
+        if ($validator->fails())
         {
             $out = [
                 "message" => $messages->first(),
@@ -32,13 +33,14 @@ class IngredientController extends Controller
         DB::beginTransaction();
         try {
             //initialization
+            $merchant_id = $request->input('merchant_id');
             $name = $request->input('name');
             $unit = $request->input('unit');
             $amount = $request->input('amount');
             $minimum_amount = $request->input('minimum_amount');
             //creating ingredient
             $data = [
-                'merchant_id' => 1,
+                'merchant_id' => $merchant_id,
                 'name' => $name,
                 'unit' => $unit
             ];
@@ -64,9 +66,9 @@ class IngredientController extends Controller
             $message = $e->getmessage();
             $out  = [
                 "message" => $message
-            ];  
+            ];
             return response()->json($out,200);
-        };       
+        };
     }
 
     public function index()
@@ -87,13 +89,15 @@ class IngredientController extends Controller
 
     public function updateingredient($id, Request $request)
     {
-        if ($request->isMethod('post')) 
+        if ($request->isMethod('post'))
         {
-            $validator = Validator::make($request->all(), 
+            $validator = Validator::make($request->all(),
             [
+                'merchant_id' => 'required',
                 'name' => 'required|max:255',
                 'unit' => 'required|max:255',
-                'amount' => 'required|integer'
+                'amount' => 'required|integer',
+                'minimum_amount' => 'required|integer'
             ]);
             $messages = $validator->errors();
             if ($validator->fails()) {
@@ -102,11 +106,12 @@ class IngredientController extends Controller
                     "code"   => 200
                 ];
             return response()->json($out, $out['code']);
-            };  
+            };
 
             DB::beginTransaction();
             try {
                 //initialize
+                $merchant_id = $request->input('merchant_id');
                 $name = $request->input('name');
                 $unit = $request->input('unit');
                 $amount = $request->input('amount');
@@ -114,41 +119,41 @@ class IngredientController extends Controller
                 //updating ingredient
                 $oldingredient = Ingredient::where("id","=",$id);
                 $data = [
-                    "merchant_id" => 1,
+                    "merchant_id" => $merchant_id,
                     "name" => $name,
                     "unit" => $unit
                 ];
-                $updateingredient = $oldingredient -> update($data);
+                $oldingredient -> update($data);
                 //updating ingredient stock
                 $oldingredientstock = Ingredient_stock::where("ingredient_id","=",$id);
                 $datastock = [
-                    "merchant_id" => 1,
+                    "merchant_id" => $merchant_id,
                     "ingredient_id" => $id,
                     "amount" => $amount,
                     "minimum_amount" => $minimum_amount
                 ];
-                $updateingredientstock = $oldingredientstock -> update($datastock);
+                    $oldingredientstock -> update($datastock);
                 DB::commit();
                 $out  = [
                     "message" => "EditIngredient - Success",
                     "code" => 200
-                ];               
+                ];
                 return response()->json($out,$out['code']);
             }catch (\exception $e) { //database tidak bisa diakses
                 DB::rollback();
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
-            };        
+            };
         };
     }
 
     public function destroy($id)
     {
         $ingredient =  Ingredient::where('id','=',$id)->first();
-        $oldingredientstock = Ingredient_stock::where("ingredient_id","=",$id); 
+        $oldingredientstock = Ingredient_stock::where("ingredient_id","=",$id);
 
         if (!$ingredient) {
             $data = [

@@ -13,10 +13,11 @@ class Payment extends Model implements AuthenticatableContract, AuthorizableCont
     use Authenticatable, Authorizable;
 
     protected $fillable = [
-        'id','information','discount'
+        'id', 'information','discount'
     ];
 
     protected $hidden = [
+
     ];
 
-}   
+}

@@ -8,16 +8,16 @@ use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Lumen\Auth\Authorizable;
 
-class Vendor extends Model implements AuthenticatableContract, AuthorizableContract
+class Agent extends Model implements AuthenticatableContract, AuthorizableContract
 {
     use Authenticatable, Authorizable;
 
     protected $fillable = [
-        'id', 'payment_id','name','percentage'
+        'id','payment_id','name','percentage'
     ];
 
     protected $hidden = [
-        
+
     ];
 
-}   
+}

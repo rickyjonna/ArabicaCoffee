@@ -40,7 +40,7 @@ $router->post("/insertproduct", "ProductController@insertproduct");
 $router->get("/listproduct", "ProductController@index");
 $router->get("/listproduct/{categoryid}", "ProductController@indexbycategoryid");
 $router->get("/listproductalert", "ProductController@indexalert");
-$router->patch("/updateproduct/{id}", "ProductController@updateproduct");
+$router->post("/updateproduct/{id}", "ProductController@updateproduct");
 $router->post("/deleteproduct/{id}", "ProductController@destroy");
 //ingredient
 $router->get("/listingredient", "IngredientController@index");
@@ -69,31 +69,31 @@ $router->post("/deleteproductcategory/{id}", "ProductCategoryController@destroy"
 $router->post("/insertorder", "OrderController@insertorder");
 $router->get("/orderlist", "OrderController@index");
 //order list
-$router->post("/updateorderlist/{id}", "OrderListController@updateorderlist"); 
+$router->post("/updateorderlist/{id}", "OrderListController@updateorderlist");
 $router->get("/sameproductordereddetail/{id}", "OrderListController@sameproductordereddetail");
-$router->post("/updateorderliststatus/{orderlist_id}", "OrderListController@updateorderliststatus"); 
+$router->post("/updateorderliststatus/{orderlist_id}", "OrderListController@updateorderliststatus");
 $router->post("/updateolsbyproductid", "OrderListController@updateolsbyproductid");
 $router->get("/deleteorderlist/{id}", "OrderListController@destroy");
 //invoice
-$router->post("/insertinvoice", "InvoiceController@insertinvoice"); 
-$router->get("/checkinvoice/{invoice_id}", "InvoiceController@checkinvoice"); 
-$router->post("/checkout/{invoice_id}", "InvoiceController@checkout"); 
+$router->post("/insertinvoice", "InvoiceController@insertinvoice");
+$router->get("/checkinvoice/{invoice_id}", "InvoiceController@checkinvoice");
+$router->post("/checkout/{invoice_id}", "InvoiceController@checkout");
 $router->delete("/deleteinvoice/{id}", "InvoiceController@destroy");
 //income -> terakhir
 $router->get("/listincome", "IncomeController@index");
 $router->delete("/deleteincome/{id}", "IncomeController@destroy");
-//partner (rekan)
-$router->post("/insertpartner", "PartnerController@insertpartner");
-$router->get("/listpartner", "PartnerController@index");
-$router->post("/updatepartner/{id}", "PartnerController@updatepartner");
-$router->post("/deletepartner/{id}", "PartnerController@destroy");
+//partner
+$router->post("/insertpartner", "partnerController@insertpartner");
+$router->get("/listpartner", "partnerController@index");
+$router->post("/updatepartner/{id}", "partnerController@updatepartner");
+$router->post("/deletepartner/{id}", "partnerController@destroy");
 //payment
 $router->post("/insertpayment", "PaymentController@insertpayment");
 $router->get("/listpayment", "PaymentController@index");
 $router->post("/updatepayment/{id}", "PaymentController@updatepayment");
 $router->post("/deletepayment/{id}", "PaymentController@destroy");
-//vendor (agen)
-$router->get("/listvendor", "VendorController@index");
-$router->post("/insertvendor", "VendorController@insertvendor");
-$router->post("/updatevendor/{id}", "VendorController@updatevendor");
-$router->post("/deletevendor/{id}", "VendorController@destroy");
+//agent
+$router->get("/listagent", "AgentController@index");
+$router->post("/insertagent", "AgentController@insertagent");
+$router->post("/updateagent/{id}", "AgentController@updateagent");
+$router->post("/deleteagent/{id}", "AgentController@destroy");

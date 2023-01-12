@@ -8,17 +8,17 @@ use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Lumen\Auth\Authorizable;
 
-class Product extends Model implements AuthenticatableContract, AuthorizableContract
+class Order_list_status extends Model implements AuthenticatableContract, AuthorizableContract
 {
     use Authenticatable, Authorizable;
 
+    protected $table = "order_list_status";
+
     protected $fillable = [
-        'merchant_id', 'partner_id', 'product_category_id',
-        'name', 'price', 'discount', 'editable', 'isformula', 'hasstock', 'information'
+        'id', 'information'
     ];
 
     protected $hidden = [
 
     ];
-
 }

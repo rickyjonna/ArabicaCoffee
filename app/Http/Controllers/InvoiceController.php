@@ -9,13 +9,13 @@ use App\Product;
 use App\Income;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //pake facades DB
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class InvoiceController extends Controller
 {
     public function insertinvoice(Request $request)
     {
-        if ($request->isMethod('post')) 
+        if ($request->isMethod('post'))
         {
             $validator = Validator::make($request->all(),  [
                 'merchant_id' => 'required|integer',
@@ -28,7 +28,7 @@ class InvoiceController extends Controller
                 'email' => 'nullable|max:20'
             ]);
             $messages = $validator->errors();
-            if ($validator->fails()) 
+            if ($validator->fails())
             {
                 $out = [
                     "message" => $messages->first()
@@ -40,14 +40,14 @@ class InvoiceController extends Controller
             try{
                 //initialize
                 $merchant_id = $request->input('merchant_id');
-                $order_id = $request->input('order_id');         
-                $user_id = $request->input('user_id'); 
-                $payment_id = $request->input('payment_id');  
-                $discount = $request->input('discount');  
-                $tax = $request->input('tax'); 
+                $order_id = $request->input('order_id');
+                $user_id = $request->input('user_id');
+                $payment_id = $request->input('payment_id');
+                $discount = $request->input('discount');
+                $tax = $request->input('tax');
                 $phone_number = $request->input('phone_number');
                 $email = $request->input('email');
-                $totalprice = Order_list::where('order_list.order_id','=',$order_id) 
+                $totalprice = Order_list::where('order_list.order_id','=',$order_id)
                 ->leftjoin('products','products.id','=','order_list.product_id')
                 ->sum(DB::raw('(products.price - (products.price * products.discount / 100)) * order_list.amount'));
 
@@ -70,7 +70,7 @@ class InvoiceController extends Controller
                     'email' => $email
                 ];
                 $insert = Invoice::create($data);
-                
+
                 //get invoice id
                 $invoice_id =Invoice::max('id');
                 $invoicetotal = $totalprice - $discount + $tax;
@@ -83,14 +83,14 @@ class InvoiceController extends Controller
                 $out  = [
                     "message" => "Invoice Berhasil Dibuat",
                     "results" => $results
-                ];               
+                ];
                 return response()->json($out,200);
             }catch (\exception $e) { //database tidak bisa diakses
                 DB::rollback();
                 $message = $e->getmessage();
                 $out  = [
                     "message" => $message
-                ];  
+                ];
                 return response()->json($out,200);
             };
         };
@@ -112,10 +112,10 @@ class InvoiceController extends Controller
     public function checkout($invoice_id, Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'information' => 'nullable'                
+            'information' => 'nullable'
         ]);
         $messages = $validator->errors();
-        if ($validator->fails()) 
+        if ($validator->fails())
         {
             $out = [
                 "message" => $messages->first()
@@ -160,14 +160,14 @@ class InvoiceController extends Controller
             DB::commit();
             $out = [
                 'message' => 'Checkout - Success'
-            ];                        
+            ];
             return response() ->json($out,200);
         }catch (\exception $e) { //database tidak bisa diakses
             DB::rollback();
             $message = $e->getmessage();
             $out  = [
                 "message" => $message
-            ];  
+            ];
             return response()->json($out,200);
         };
     }

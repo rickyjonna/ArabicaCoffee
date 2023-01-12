@@ -13,10 +13,10 @@ class Partner extends Model implements AuthenticatableContract, AuthorizableCont
     use Authenticatable, Authorizable;
 
     protected $fillable = [
-        'id','owner','profit'
+        'id','owner','percentage'
     ];
 
     protected $hidden = [
     ];
 
-}   
+}

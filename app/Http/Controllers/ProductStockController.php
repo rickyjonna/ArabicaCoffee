@@ -5,14 +5,14 @@ namespace App\Http\Controllers;
 use App\Product_stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //pake facades DB
-use Validator, Input, Redirect;
+use Illuminate\Support\Facades\Validator;
 
 class ProductStockController extends Controller
 {
     public function index()
     {
         $stock = Product_stock::leftjoin('products', 'products.id', '=', 'product_stock.product_id')
-        ->addselect('products.name as Produk', 'amount as Jumlah') 
+        ->addselect('products.name as Produk', 'amount as Jumlah')
         ->OrderBy("products.id", "ASC")
         ->get();
 
@@ -29,9 +29,9 @@ class ProductStockController extends Controller
 
     public function updatestock($id, Request $request)
     {
-        if ($request->isMethod('patch')) 
+        if ($request->isMethod('patch'))
         {
-            $validator = Validator::make($request->all(), 
+            $validator = Validator::make($request->all(),
             [
                 'merchant_id' => 'required|integer',
                 'amount' => 'required|integer',
@@ -44,7 +44,7 @@ class ProductStockController extends Controller
                     "code"   => 400
                 ];
             return response()->json($out, $out['code']);
-            };  
+            };
 
             DB::beginTransaction();
             try {
@@ -64,7 +64,7 @@ class ProductStockController extends Controller
                 $out  = [
                     "message" => "Stock Telah Diperbaharui",
                     "code" => 200
-                ];               
+                ];
                 return response()->json($out,$out['code']);
             }catch(\exception $e) {
                 DB::rollback();
@@ -82,7 +82,7 @@ class ProductStockController extends Controller
                     ];
                 };
                 return response()->json($out,$out['code']);
-            };        
+            };
         };
     }
 

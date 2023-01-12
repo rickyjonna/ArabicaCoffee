@@ -11,13 +11,13 @@ use Laravel\Lumen\Auth\Authorizable;
 class Merchant extends Model implements AuthenticatableContract, AuthorizableContract
 {
     use Authenticatable, Authorizable;
-    
+
     protected $fillable = [
-        'name', 'address', 'phone_number'
+        'id','name', 'address', 'phone_number'
     ];
 
     protected $hidden = [
-        'id'
+
     ];
-    
+
 }

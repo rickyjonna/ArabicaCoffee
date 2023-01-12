@@ -15,7 +15,7 @@ class Ingredient_stock extends Model implements AuthenticatableContract, Authori
     protected $table = "ingredient_stock";
 
     protected $fillable = [
-        'id', 'merchant_id', 'ingredient_id', 'amount', 'minimum_amount'
+        'id','merchant_id', 'ingredient_id', 'amount', 'minimum_amount'
     ];
 
     protected $hidden = [
