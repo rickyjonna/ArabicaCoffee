@@ -12,12 +12,12 @@ class ProductStockController extends Controller
     public function index()
     {
         $stock = Product_stock::leftjoin('products', 'products.id', '=', 'product_stock.product_id')
-        ->addselect('products.name as Produk', 'amount as Jumlah')
+        ->addselect('products.name as Produk', 'amount as Jumlah', 'minimum_amount', 'unit')
         ->OrderBy("products.id", "ASC")
         ->get();
 
         $result = [
-            "stock" => $stock
+            "productstock" => $stock
         ];
 
         $out = [

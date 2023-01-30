@@ -50,7 +50,7 @@ class PageController extends Controller
             //dashboard admin
             if ($usertypeid == 1){
                 $out = [
-                    "message" => "Success - Dashboard",
+                    "message" => "Page-Dashboard-Success",
                     "result" => [
                         "user" => $user,
                         "today_income" => $today_income,
@@ -62,7 +62,7 @@ class PageController extends Controller
                 return response()->json($out, 200);
             } elseif ($usertypeid == 2){
                 $out = [
-                    "message" => "Success - Dashboard",
+                    "message" => "Page-Dashboard-Success",
                     "result" => [
                         "user" => $user,
                         "product" => $product_minimum,
@@ -72,7 +72,7 @@ class PageController extends Controller
                 return response()->json($out, 200);
             } elseif ($usertypeid == 3){
                 $out = [
-                    "message" => "Success - Dashboard",
+                    "message" => "Page-Dashboard-Success",
                     "result" => [
                         "user" => $user,
                         "product" => $product_minimum,
