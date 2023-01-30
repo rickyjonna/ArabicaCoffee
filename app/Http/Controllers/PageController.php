@@ -16,9 +16,7 @@ use App\Payment;
 use App\Product;
 use App\Product_category;
 use App\Table;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
-use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\DB; //pake facades DB
 
 class PageController extends Controller
@@ -271,6 +269,7 @@ class PageController extends Controller
         ->addselect('discount')
         ->selectRaw('price - discount as total_price')
         ->addselect(DB::raw('(CASE WHEN amount is null THEN null ELSE amount END) as total_stock'))
+        ->addselect(DB::raw('(CASE WHEN minimum_amount is null THEN null ELSE minimum_amount END) as minimum_stock'))
         ->addselect('product_category.information as category')
         ->where("products.editable", "=", "1")
         ->OrderBy("products.id", "ASC")
@@ -342,7 +341,7 @@ class PageController extends Controller
 
     public function partner(){
 
-        $partner = Partner::select('id','owner','profit')
+        $partner = Partner::select('id','owner','percentage')
         ->get();
 
         $results = [

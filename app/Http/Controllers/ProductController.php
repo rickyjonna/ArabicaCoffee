@@ -359,7 +359,7 @@ class ProductController extends Controller
     public function indexalert()
     {
         $getPost = Product::leftjoin('product_stock', 'product_stock.product_id', '=', 'products.id')
-        ->addselect('products.name','product_stock.amount')
+        ->addselect('products.id as id','products.name','product_stock.amount','product_stock.minimum_amount')
         ->whereRaw('amount <= minimum_amount')
         ->where("products.editable", "=", "1")
         ->OrderBy("products.id", "ASC")
@@ -368,7 +368,7 @@ class ProductController extends Controller
         //ke ingredient belom
 
         $out = [
-            "message" => "List Produk",
+            "message" => "List-Product-Alert",
             "results" => $getPost
         ];
         return response()->json($out, 200);
@@ -383,11 +383,26 @@ class ProductController extends Controller
                 "message" => "Product - NotFound"
             ];
         } else {
-            $product->delete();
-            $data = [
-                "message" => "Delete - Product - Success"
-            ];
+            DB::beginTransaction();
+            try{
+                $editable = [
+                    "editable" => 0
+                ];
+                $product->update($editable);
+                DB::commit();
+                $out  = [
+                    "message" => "DeleteProduct - Success",
+                    "code"  => 200
+                ];
+                return response()->json($out, $out['code']);
+            }catch (\exception $e) { //database tidak bisa diakses
+                DB::rollback();
+                $message = $e->getmessage();
+                $out  = [
+                    "message" => "$message"
+                ];
+                return response()->json($out,200);
+            };
         };
-        return response()->json($data, 200);
     }
 }

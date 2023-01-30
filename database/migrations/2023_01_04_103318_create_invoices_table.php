@@ -20,11 +20,11 @@ class CreateInvoicesTable extends Migration
             $table->foreignId('user_id');
             $table->foreignId('payment_id');
             $table->string('status');
-            $table->string('discount');
-            $table->string('tax');
-            $table->string('total');
-            $table->string('phone_number');
-            $table->string('email');
+            $table->integer('discount');
+            $table->integer('tax');
+            $table->integer('total');
+            $table->string('phone_number')->nullable();
+            $table->string('email')->nullable();
             $table->timestamps();
         });
     }

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Agent;
+use App\Income_type;
 use App\User;
 use App\Partner;
 use App\Payment;
@@ -137,8 +138,7 @@ class DatabaseSeeder extends Seeder
         Table::create([
             'merchant_id' => 1,
             'number' => 1,
-            'extend' => 1,
-            'status' => 'CLOSED'
+            'extend' => 1
         ]);
 
         Order_list_status::create([
@@ -150,7 +150,19 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Order_list_status::create([
+            'information' => 'Done',
+        ]);
+
+        Order_list_status::create([
             'information' => 'Served',
+        ]);
+
+        Income_type::create([
+            'information' => 'Penjualan'
+        ]);
+
+        Income_type::create([
+            'information' => 'Top Up'
         ]);
     }
 }

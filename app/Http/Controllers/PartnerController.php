@@ -16,7 +16,7 @@ class PartnerController extends Controller
             $validator = Validator::make($request->all(),
             [
                 'owner' => 'required|unique:partners|max:30',
-                'profit' => 'required|max:4'
+                'percentage' => 'required|max:4'
             ]);
             $messages = $validator->errors();
             if ($validator->fails())
@@ -32,12 +32,12 @@ class PartnerController extends Controller
             try {
                 //initialize
                 $owner = $request->input('owner');
-                $profit = $request->input('profit');       //janganlupa  ubah  profit ke bentuk non %
+                $percentage = $request->input('percentage');       //janganlupa  ubah  percentage ke bentuk non %
 
                 //making partner
                 $data = [
                     'owner' => $owner,
-                    'profit' => $profit
+                    'percentage' => $percentage
                 ];
                 $insert = Partner::create($data);
                 DB::commit();
@@ -59,7 +59,7 @@ class PartnerController extends Controller
 
     public function index()
     {
-        $getPost = Partner::Select('owner as Rekan', 'profit as Profit')
+        $getPost = Partner::Select('owner as Rekan', 'percentage as percentage')
         ->OrderBy("id", "DESC")
         ->get();
 
@@ -78,7 +78,7 @@ class PartnerController extends Controller
             $validator = Validator::make($request->all(),
             [
                 'owner' => 'required|max:30',
-                'profit' => 'required|max:4'
+                'percentage' => 'required|max:4'
             ]);
             $messages = $validator->errors();
             if ($validator->fails()) {
@@ -93,13 +93,13 @@ class PartnerController extends Controller
             try {
                 //initialize
                 $owner = $request->input('owner');
-                $profit = $request->input('profit');
+                $percentage = $request->input('percentage');
 
                 //updating old partner
                 $oldpartner = Partner::where('id','=',$id);
                 $data = [
                     'owner' => $owner,
-                    'profit' => $profit
+                    'percentage' => $percentage
                 ];
                 $updatepartner = $oldpartner -> update($data);
                 DB::commit();

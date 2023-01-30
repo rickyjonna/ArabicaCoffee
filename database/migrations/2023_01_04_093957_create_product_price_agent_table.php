@@ -18,7 +18,7 @@ class CreateProductPriceAgentTable extends Migration
             $table->foreignId('merchant_id');
             $table->foreignId('product_id');
             $table->foreignId('agent_id');
-            $table->string('agent_price');
+            $table->integer('agent_price');
             $table->timestamps();
         });
     }

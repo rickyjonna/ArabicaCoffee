@@ -17,8 +17,8 @@ class CreateProductStockTable extends Migration
             $table->id();
             $table->foreignId('merchant_id');
             $table->foreignId('product_id');
-            $table->string('amount');
-            $table->string('minimum_amount');
+            $table->smallInteger('amount');
+            $table->smallInteger('minimum_amount');
             $table->string('unit');
             $table->timestamps();
         });

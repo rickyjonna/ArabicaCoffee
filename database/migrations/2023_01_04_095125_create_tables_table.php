@@ -16,8 +16,8 @@ class CreateTablesTable extends Migration
         Schema::create('tables', function (Blueprint $table) {
             $table->id();
             $table->foreignId('merchant_id');
-            $table->string('number');
-            $table->string('extend');
+            $table->tinyInteger('number');
+            $table->tinyInteger('extend');
             $table->string('status')->default('Available');
             $table->timestamps();
         });

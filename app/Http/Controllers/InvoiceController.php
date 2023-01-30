@@ -130,13 +130,14 @@ class InvoiceController extends Controller
             ];
             $invoice = Invoice::where('id','=',$invoice_id);
             $updateinvoice = $invoice->update($datainvoice);
+
             //ubah status order
-            $dataorder = [
-                'status' => 'CLOSED'
-            ];
-            $order_id = $invoice->max('order_id');
-            $order = Order::where('id','=',$order_id);
-            $updateorder = $order->update($dataorder);
+            // $dataorder = [
+            //     'status' => 'CLOSED'
+            // ];
+            // $order_id = $invoice->max('order_id');
+            // $order = Order::where('id','=',$order_id);
+            // $updateorder = $order->update($dataorder);
 
             //buat laporan pemasukan
             $merchant_id = $invoice->max('merchant_id');

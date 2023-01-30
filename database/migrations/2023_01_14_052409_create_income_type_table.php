@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAgentsTable extends Migration
+class CreateIncomeTypeTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,9 @@ class CreateAgentsTable extends Migration
      */
     public function up()
     {
-        Schema::create('agents', function (Blueprint $table) {
+        Schema::create('income_type', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('payment_id');
-            $table->string('name');
-            $table->smallInteger('percentage');
+            $table->string('information');
             $table->timestamps();
         });
     }
@@ -29,6 +27,6 @@ class CreateAgentsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('agents');
+        Schema::dropIfExists('income_type');
     }
 }

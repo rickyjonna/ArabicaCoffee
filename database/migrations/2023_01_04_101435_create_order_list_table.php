@@ -20,7 +20,7 @@ class CreateOrderListTable extends Migration
             $table->foreignId('product_id');
             $table->foreignId('user_id');
             $table->foreignId('order_list_status_id');
-            $table->string('amount');
+            $table->tinyInteger('amount');
             $table->timestamps();
         });
     }

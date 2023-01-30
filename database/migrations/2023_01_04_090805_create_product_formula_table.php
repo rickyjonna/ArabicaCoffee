@@ -18,7 +18,7 @@ class CreateProductFormulaTable extends Migration
             $table->foreignId('merchant_id');
             $table->foreignId('product_id');
             $table->foreignId('ingredient_id');
-            $table->string('amount');
+            $table->mediumInteger('amount');
             $table->timestamps();
         });
     }

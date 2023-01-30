@@ -17,8 +17,8 @@ class CreateIngredientStockTable extends Migration
             $table->id();
             $table->foreignId('merchant_id');
             $table->foreignId('ingredient_id');
-            $table->string('amount');
-            $table->string('minimum_amount');
+            $table->mediumInteger('amount');
+            $table->mediumInteger('minimum_amount');
             $table->timestamps();
         });
     }

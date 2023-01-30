@@ -19,8 +19,8 @@ class CreateProductsTable extends Migration
             $table->foreignId('merchant_id');
             $table->foreignId('product_category_id');
             $table->string('name');
-            $table->string('price');
-            $table->string('discount');
+            $table->integer('price');
+            $table->smallInteger('discount');
             $table->boolean('editable');
             $table->boolean('isformula');
             $table->boolean('hasstock');

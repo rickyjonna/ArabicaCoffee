@@ -16,7 +16,7 @@ class CreatePartnersTable extends Migration
         Schema::create('partners', function (Blueprint $table) {
             $table->id();
             $table->string('owner');
-            $table->string('percentage');
+            $table->smallInteger('percentage');
             $table->timestamps();
         });
     }
