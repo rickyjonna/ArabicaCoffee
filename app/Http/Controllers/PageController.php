@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Agent;
+use App\Income;
 use App\User;
 use App\User_type;
 use App\Invoice;
@@ -32,10 +33,10 @@ class PageController extends Controller
             ->where('users.token', '=', $token)
             ->select('users.id as user_id','user_type_id', 'name as user_name', 'information as user_type')
             ->get();
-            $today_income = Invoice::where('status','=','PAID')
-            ->whereraw('Date(updated_at) = CURDATE()')
+            $today_income = Income::whereraw('Date(updated_at) = CURDATE()')
             ->sum('total');
             $user_active = User::where('token', '!=', null)
+            ->where('users.user_type_id', '!=', 1)
             ->get('name');
             $product_minimum = Product_stock::leftjoin('products', 'products.id', '=', 'product_stock.product_id')
             ->whereraw('product_stock.amount <= product_stock.minimum_amount')
@@ -71,6 +72,36 @@ class PageController extends Controller
                 ];
                 return response()->json($out, 200);
             } elseif ($usertypeid == 3){
+                $out = [
+                    "message" => "Page-Dashboard-Success",
+                    "result" => [
+                        "user" => $user,
+                        "product" => $product_minimum,
+                        "ingredient" => $ingredient_minimum
+                    ]
+                ];
+                return response()->json($out, 200);
+            } elseif ($usertypeid == 4){
+                $out = [
+                    "message" => "Page-Dashboard-Success",
+                    "result" => [
+                        "user" => $user,
+                        "product" => $product_minimum,
+                        "ingredient" => $ingredient_minimum
+                    ]
+                ];
+                return response()->json($out, 200);
+            } elseif ($usertypeid == 5){
+                $out = [
+                    "message" => "Page-Dashboard-Success",
+                    "result" => [
+                        "user" => $user,
+                        "product" => $product_minimum,
+                        "ingredient" => $ingredient_minimum
+                    ]
+                ];
+                return response()->json($out, 200);
+            } elseif ($usertypeid == 6){
                 $out = [
                     "message" => "Page-Dashboard-Success",
                     "result" => [
@@ -357,7 +388,7 @@ class PageController extends Controller
 
     public function table(){
 
-        $table = Table::select('id','number','extend')
+        $table = Table::select('id','number','extend','status')
         ->get();
 
         $results = [

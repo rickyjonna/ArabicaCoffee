@@ -26,21 +26,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        User::Create([
-            'user_type_id' => '1',
-            'merchant_id' => '1',
-            'name' => 'Ricky Jonna M K',
-            'password' => Hash::make('123456'),
-            'address' => 'Jl.Jahe Raya No.70',
-            'phone_number' => '01'
-        ]);
-
-        Merchant::Create([
-            'name' => 'CikDitiro',
-            'address' => 'Jln CikDitiro',
-            'phone_number' => '0618360966'
-        ]);
-
         User_type::Create([
             'information' => 'Admin'
         ]);
@@ -58,6 +43,66 @@ class DatabaseSeeder extends Seeder
         ]);
         User_type::Create([
             'information' => 'Cashier'
+        ]);
+
+        Merchant::Create([
+            'name' => 'CikDitiro',
+            'address' => 'Jln CikDitiro',
+            'phone_number' => '0618360966'
+        ]);
+
+        User::Create([
+            'user_type_id' => '1',
+            'merchant_id' => '1',
+            'name' => 'Ricky Jonna M K',
+            'password' => Hash::make('123456'),
+            'address' => 'Jl.Jahe Raya No.70',
+            'phone_number' => '01'
+        ]);
+
+        User::Create([
+            'user_type_id' => '2',
+            'merchant_id' => '1',
+            'name' => 'Ricky Jonna M K2',
+            'password' => Hash::make('123456'),
+            'address' => 'Jl.Jahe Raya No.70',
+            'phone_number' => '02'
+        ]);
+
+        User::Create([
+            'user_type_id' => '3',
+            'merchant_id' => '1',
+            'name' => 'Ricky Jonna M K3',
+            'password' => Hash::make('123456'),
+            'address' => 'Jl.Jahe Raya No.70',
+            'phone_number' => '03'
+        ]);
+
+        User::Create([
+            'user_type_id' => '4',
+            'merchant_id' => '1',
+            'name' => 'Ricky Jonna M K4',
+            'password' => Hash::make('123456'),
+            'address' => 'Jl.Jahe Raya No.70',
+            'phone_number' => '04'
+        ]);
+
+        User::Create([
+            'user_type_id' => '5',
+            'merchant_id' => '1',
+            'name' => 'Ricky Jonna M K5',
+            'password' => Hash::make('123456'),
+            'address' => 'Jl.Jahe Raya No.70',
+            'phone_number' => '05'
+        ]);
+
+        User::Create([
+            'user_type_id' => '6',
+            'merchant_id' => '1',
+            'name' => 'Ricky Jonna M K6',
+            'password' => Hash::make('123456'),
+            'address' => 'Jl.Jahe Raya No.70',
+            'phone_number' => '06'
         ]);
 
         Partner::Create([

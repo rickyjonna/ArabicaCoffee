@@ -15,7 +15,8 @@ class TableController extends Controller
         {
             $validator = Validator::make($request->all(), [
                 'number' => 'required|integer',
-                'extend' => 'required|integer'
+                'extend' => 'required|integer',
+                'status' => 'required'
             ]);
             $messages = $validator->errors();
             if ($validator->fails())
@@ -31,12 +32,14 @@ class TableController extends Controller
                 //initialize
                 $number = $request->input('number');
                 $extend = $request->input('extend');
+                $status = $request->input('status');
 
                 //making Table
                 $data = [
                     'merchant_id' => 1,
                     'number' => $number,
-                    'extend' => $extend
+                    'extend' => $extend,
+                    'status' => $status
                 ];
                 Table::create($data);
                 DB::commit();
@@ -63,7 +66,8 @@ class TableController extends Controller
             $validator = Validator::make($request->all(),
             [
                 'number' => 'required|integer',
-                'extend' => 'required|integer'
+                'extend' => 'required|integer',
+                'status' => 'required'
             ]);
             $messages = $validator->errors();
             if ($validator->fails())
@@ -80,13 +84,14 @@ class TableController extends Controller
                 //initialize
                 $number = $request->input('number');
                 $extend = $request->input('extend');
-
+                $status = $request->input('status');
 
                 //updating old Table
                 $oldtable = Table::where('id','=',$id);
                 $data = [
                     'number' => $number,
-                    'extend' => $extend
+                    'extend' => $extend,
+                    'status' => $status
                 ];
                 $updatetable = $oldtable -> update($data);
                 DB::commit();

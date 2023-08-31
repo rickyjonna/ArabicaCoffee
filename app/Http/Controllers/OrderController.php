@@ -22,7 +22,7 @@ class OrderController extends Controller
                 'merchant_id' => 'required|integer',
                 'product_id' => 'required|array',
                 'amount' => 'required|array',
-                'table_id' => 'nullable|integer|unique:orders',
+                'table_id' => 'nullable|integer',
                 'agent_id' => 'nullable|integer',
                 'information' => 'nullable',
                 'note' => 'nullable'
