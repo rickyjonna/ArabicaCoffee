@@ -9,7 +9,6 @@ use App\Partner;
 use App\Payment;
 use App\Product;
 use App\Merchant;
-use App\Order_list;
 use App\Order_list_status;
 use App\Product_category;
 use App\Table;
@@ -33,6 +32,9 @@ class DatabaseSeeder extends Seeder
             'information' => 'Supervisor'
         ]);
         User_type::Create([
+            'information' => 'Cashier'
+        ]);
+        User_type::Create([
             'information' => 'Waitress'
         ]);
         User_type::Create([
@@ -40,9 +42,6 @@ class DatabaseSeeder extends Seeder
         ]);
         User_type::Create([
             'information' => 'Barista'
-        ]);
-        User_type::Create([
-            'information' => 'Cashier'
         ]);
 
         Merchant::Create([
