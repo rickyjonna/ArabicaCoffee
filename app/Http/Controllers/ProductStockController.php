@@ -12,7 +12,7 @@ class ProductStockController extends Controller
     public function index()
     {
         $stock = Product_stock::leftjoin('products', 'products.id', '=', 'product_stock.product_id')
-        ->addselect('products.name as Produk', 'amount as Jumlah', 'minimum_amount', 'unit')
+        ->addselect('product_stock.id', 'products.name as Produk', 'amount as Jumlah', 'minimum_amount', 'unit')
         ->OrderBy("products.id", "ASC")
         ->get();
 
@@ -29,11 +29,10 @@ class ProductStockController extends Controller
 
     public function updatestock($id, Request $request)
     {
-        if ($request->isMethod('patch'))
+        if ($request->isMethod('post'))
         {
             $validator = Validator::make($request->all(),
             [
-                'merchant_id' => 'required|integer',
                 'amount' => 'required|integer',
                 'minimum_amount' => 'required|integer'
             ]);
@@ -41,7 +40,7 @@ class ProductStockController extends Controller
             if ($validator->fails()) {
                 $out = [
                     "message" => $messages->first(),
-                    "code"   => 400
+                    "code"   => 200
                 ];
             return response()->json($out, $out['code']);
             };
@@ -49,39 +48,28 @@ class ProductStockController extends Controller
             DB::beginTransaction();
             try {
                 //initialize
-                $merchant_id = $request->input('merchant_id');
                 $amount = $request->input('amount');
                 $minimum_amount = $request->input('minimum_amount');
                 //updating old stock
                 $oldstock = Product_stock::where("id","=",$id);
                 $data = [
-                    "merchant_id" => $merchant_id,
                     "amount" => $amount,
                     "minimum_amount" => $minimum_amount
                 ];
-                $updatestock = $oldstock -> update($data);
+                $oldstock -> update($data);
                 DB::commit();
                 $out  = [
-                    "message" => "Stock Telah Diperbaharui",
+                    "message" => "EditStock - Success",
                     "code" => 200
                 ];
                 return response()->json($out,$out['code']);
-            }catch(\exception $e) {
+            }catch (\exception $e) { //database tidak bisa diakses
                 DB::rollback();
-                $errorcode = $e->getcode();
                 $message = $e->getmessage();
-                if ($e instanceof \PDOException){ //dikarenakan kalau ada inputan empty mengakibatkan $e tidak catch apa2(kosong) maka dibuat code ini << belum
-                    $out = [
-                        "message" => $message,
-                        "code" => 400
-                    ];
-                } else {
-                    $out = [
-                        "message" => "Error, Ada Inputan Kosong",
-                        "code" => 400
-                    ];
-                };
-                return response()->json($out,$out['code']);
+                $out  = [
+                    "message" => $message
+                ];
+                return response()->json($out,200);
             };
         };
     }

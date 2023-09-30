@@ -49,7 +49,7 @@ $router->post("/updateingredient/{id}", "IngredientController@updateingredient")
 $router->post("/deleteingredient/{id}", "IngredientController@destroy");
 //stock
 $router->get("/liststock", "ProductStockController@index");
-$router->patch("/updatestock/{id}", "ProductStockController@updatestock");
+$router->post("/updatestock/{id}", "ProductStockController@updatestock");
 $router->delete("/deletestock/{id}", "ProductStockController@destroy");
 //formula
 $router->get("/listformula", "ProductFormulaController@index");
