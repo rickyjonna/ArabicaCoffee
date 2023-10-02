@@ -25,7 +25,7 @@ class ProductController extends Controller
                 'merchant_id' => 'required|integer',
                 'partner_id' => 'required|integer',
                 'product_category_id' => 'required|integer',
-                'name' => 'required|unique:products|max:255',
+                'name' => 'required|max:255',
                 'price' => 'required|max:10',
                 'discount' => 'required|max:4',
                 'isformula' => 'required',
@@ -35,7 +35,8 @@ class ProductController extends Controller
                 'minimum_amount' => 'nullable',
                 'unit' => 'nullable',
                 'ingredient' => 'nullable|array',
-                'agent_price' => 'nullable|array'
+                'agent_price' => 'nullable|array',
+                'editable' => 'required',
             ]);
             $messages = $validator->errors();
             if ($validator->fails()) {
@@ -57,6 +58,7 @@ class ProductController extends Controller
                 $hasstock = $request->input('hasstock');
                 $information = $request->input('information');
                 $agent_price = $request->input('agent_price');
+                $editable = $request->input('editable');
 
                 //making product
                 $dataproduct = [
@@ -69,7 +71,7 @@ class ProductController extends Controller
                     'hasstock' => $hasstock,
                     'isformula' => $isformula,
                     'information' => $information,
-                    'editable' => 1
+                    'editable' => $editable,
                 ];
                 Product::create($dataproduct);
                 $newproductid = Product::max("id");

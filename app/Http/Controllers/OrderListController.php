@@ -164,7 +164,7 @@ class OrderListController extends Controller //fix discount
 
                 //checking if served -> then stock (-)
                 if($order_list_status_id == 4){
-                    if(Product::where('id','=',$product_id)->max('isformula') == 0){
+                    if(Product::where('id','=',$product_id)->max('hasstock') == 1){
                         //old amount
                         $product_stock_amount = Product_stock::where('product_id','=',$product_id)->max('amount');
                         //new amount
