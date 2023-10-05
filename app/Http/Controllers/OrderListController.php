@@ -162,21 +162,6 @@ class OrderListController extends Controller //fix discount
                 ];
                 Order_list::where('id','=',$orderlist_id)->update($neworderlistdata);
 
-                //checking if served -> then stock (-)
-                if($order_list_status_id == 4){
-                    if(Product::where('id','=',$product_id)->max('hasstock') == 1){
-                        //old amount
-                        $product_stock_amount = Product_stock::where('product_id','=',$product_id)->max('amount');
-                        //new amount
-                        $newstock = $product_stock_amount - $order_list_amount;
-                        $datastock = [
-                            'amount' => $newstock
-                        ];
-                        //updating the stock
-                        Product_stock::where('product_id','=',$product_id)->update($datastock);
-                    }
-                };
-
                 //checking other otherlist with same orderid
                 $orderlistnotdone = Order_list::where('order_id','=',$order_id)
                 ->where('order_list_status_id','!=',4)

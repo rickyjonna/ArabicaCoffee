@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Order;
-use App\Order_list;
-use App\Table;
+use App\Ingredient;
+use App\Ingredient_stock;
 use App\User;
+use App\Order;
+use App\Table;
+use App\Product;
+use App\Product_stock;
+use App\Order_list;
+use App\Product_formula;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; //pake facades DB
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB; //pake facades DB
 
 class OrderController extends Controller
 {
@@ -72,6 +77,55 @@ class OrderController extends Controller
 
                 //get the order_id
                 $order_id = Order::max('id');
+
+                //checking if product has stock then (-)
+                for($i=0; $i < $product_id_count; $i++){
+                    $product = Product::where('id','=',$product_id[$i])->first();
+                    if($product->max('hasstock') == 1){
+                        //old amount
+                        $product_stock_amount = Product_stock::where('product_id','=',$product_id)->max('amount');
+                        if($product_stock_amount >= $amount[$i]){
+                            //new amount
+                            $newstock = $product_stock_amount - $amount[$i];
+                            $datastock = [
+                                'amount' => $newstock
+                            ];
+                            //updating the stock
+                            Product_stock::where('product_id','=',$product_id)->update($datastock);
+                        } else {
+                            DB::rollback();
+                                $out  = [
+                                    "message" => "Stok Tidak Mencukupi untuk ".$product->name
+                                ];
+                                return response()->json($out,200);
+                        }
+                    };
+                }
+
+                //checking if product has ingredient then (-)
+                for($i=0; $i < $product_id_count; $i++){
+                    $product = Product::where('id','=',$product_id[$i])->first();
+                    if($product->max('isformula') == 1){
+                        $formulas = Product_formula::where('product_id','=',$product_id[$i])->get();
+                        foreach ($formulas as $formula) {
+                            $ingredient = Ingredient::where('id','=',$formula->ingredient_id)->first();
+                            $ingredient_stock = Ingredient_stock::where('ingredient_id','=',$ingredient->id)->first();
+                            if ($ingredient_stock->amount >= ($amount[$i]*$formula->amount)) {
+                                $ingredient_stock_newamount = $ingredient_stock->amount -= ($amount[$i]*$formula->amount);
+                                $data = [
+                                    'amount' => $ingredient_stock_newamount,
+                                ];
+                                Ingredient_stock::where('ingredient_id','=',$ingredient->id)->update($data);
+                            } else {
+                                DB::rollback();
+                                $out  = [
+                                    "message" => "Stok Tidak Mencukupi untuk ".$product->name
+                                ];
+                                return response()->json($out,200);
+                            }
+                        }
+                    };
+                }
 
                 //making Order list
                 for($i=0; $i < $product_id_count; $i++)

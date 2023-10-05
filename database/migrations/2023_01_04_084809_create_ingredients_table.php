@@ -18,6 +18,7 @@ class CreateIngredientsTable extends Migration
             $table->foreignId('merchant_id');
             $table->string('name');
             $table->string('unit');
+            $table->date('expired_at');
             $table->timestamps();
         });
     }

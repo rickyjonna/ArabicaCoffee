@@ -405,7 +405,7 @@ class PageController extends Controller
     public function ingredient(){
 
         $ingredient = Ingredient::leftjoin('ingredient_stock','ingredients.id','=','ingredient_stock.ingredient_id')
-        ->select('ingredients.id','ingredients.name','ingredients.unit','ingredient_stock.amount','ingredient_stock.minimum_amount')
+        ->select('ingredients.id','ingredients.name','ingredients.unit','ingredient_stock.amount','ingredient_stock.minimum_amount', "ingredients.expired_at")
         ->get();
 
         $results = [

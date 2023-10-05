@@ -17,8 +17,9 @@ class IngredientController extends Controller
                 'merchant_id' => 'required',
                 'name' => 'required|unique:ingredients|max:255',
                 'unit' => 'required|max:255',
-                'amount' => 'required|integer',
-                'minimum_amount' =>'required|integer'
+                'amount' => 'required|numeric|between:0.01,99999999.99',
+                'minimum_amount' => 'required|numeric|between:0.01,99999999.99',
+                'expired_at' => 'required|date'
             ]);
         $messages = $validator->errors();
         if ($validator->fails())
@@ -38,11 +39,13 @@ class IngredientController extends Controller
             $unit = $request->input('unit');
             $amount = $request->input('amount');
             $minimum_amount = $request->input('minimum_amount');
+            $expired_at = $request->input('expired_at');
             //creating ingredient
             $data = [
                 'merchant_id' => $merchant_id,
                 'name' => $name,
-                'unit' => $unit
+                'unit' => $unit,
+                'expired_at' => $expired_at,
             ];
             Ingredient::create($data);
             //get the ingredient id
@@ -96,8 +99,9 @@ class IngredientController extends Controller
                 'merchant_id' => 'required',
                 'name' => 'required|max:255',
                 'unit' => 'required|max:255',
-                'amount' => 'required|integer',
-                'minimum_amount' => 'required|integer'
+                'amount' => 'required|numeric|between:0.01,99999999.99',
+                'minimum_amount' => 'required|numeric|between:0.01,99999999.99',
+                'expired_at' => 'required|date',
             ]);
             $messages = $validator->errors();
             if ($validator->fails()) {
@@ -116,12 +120,14 @@ class IngredientController extends Controller
                 $unit = $request->input('unit');
                 $amount = $request->input('amount');
                 $minimum_amount = $request->input('minimum_amount');
+                $expired_at = $request->input('expired_at');
                 //updating ingredient
                 $oldingredient = Ingredient::where("id","=",$id);
                 $data = [
                     "merchant_id" => $merchant_id,
                     "name" => $name,
-                    "unit" => $unit
+                    "unit" => $unit,
+                    'expired_at' => $expired_at,
                 ];
                 $oldingredient -> update($data);
                 //updating ingredient stock
