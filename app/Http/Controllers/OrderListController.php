@@ -208,7 +208,7 @@ class OrderListController extends Controller //fix discount
             $user_id = $request->input('user_id');
             $neworderlistdata = [
                 "user_id" => $user_id,
-                "order_list_status_id" => 2
+                "order_list_status_id" => 4
             ];
             $order_list = Order_list::where('product_id','=',$product_id)
             ->where('order_list_status_id','=',1)

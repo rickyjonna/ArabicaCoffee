@@ -7,6 +7,7 @@ use App\Order;
 use App\Order_list;
 use App\Product;
 use App\Income;
+use App\Table;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //pake facades DB
 use Illuminate\Support\Facades\Validator;
@@ -130,6 +131,14 @@ class InvoiceController extends Controller
             ];
             $invoice = Invoice::where('id','=',$invoice_id);
             $updateinvoice = $invoice->update($datainvoice);
+
+            //ubah status table
+            $datatable = [
+                'status' => "Available"
+            ];
+            $order = Order::where('id','=',$invoice->max('order_id'));
+            $table = Table::where('id','=',$order->max('table_id'));
+            $updatetablestatus = $table->update($datatable);
 
             //ubah status order
             // $dataorder = [
