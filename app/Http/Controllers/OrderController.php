@@ -80,7 +80,7 @@ class OrderController extends Controller
 
                 //checking if product has stock then (-)
                 for($i=0; $i < $product_id_count; $i++){
-                    $product = Product::where('id','=',$product_id[$i])->first();
+                    $product = Product::where('id','=',$product_id[$i])->get();
                     if($product->max('hasstock') == 1){
                         //old amount
                         $product_stock_amount = Product_stock::where('product_id','=',$product_id)->max('amount');
@@ -99,6 +99,8 @@ class OrderController extends Controller
                                 ];
                                 return response()->json($out,200);
                         }
+                    } else {
+
                     };
                 }
 
@@ -119,7 +121,7 @@ class OrderController extends Controller
                             } else {
                                 DB::rollback();
                                 $out  = [
-                                    "message" => "Stok Tidak Mencukupi untuk ".$product->name
+                                    "message" => "Bahan Tidak Mencukupi untuk ".$product->name
                                 ];
                                 return response()->json($out,200);
                             }
