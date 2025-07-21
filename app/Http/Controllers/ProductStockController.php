@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Product_stock;
+use App\Product_stock_change;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; //pake facades DB
 use Illuminate\Support\Facades\Validator;
@@ -48,15 +49,27 @@ class ProductStockController extends Controller
             DB::beginTransaction();
             try {
                 //initialize
-                $amount = $request->input('amount');
-                $minimum_amount = $request->input('minimum_amount');
-                //updating old stock
                 $oldstock = Product_stock::where("id","=",$id);
+                $oldstockdata = Product_stock::where("id","=",$id)->get();
+                $amount_before = $oldstockdata->max("amount");
+                $minimum_amount_before = $oldstockdata->max("minimum_amount");
+                $amount_after = $request->input('amount');
+                $minimum_amount_after = $request->input('minimum_amount');
+                //updating old stock
                 $data = [
-                    "amount" => $amount,
-                    "minimum_amount" => $minimum_amount
+                    "amount" => $amount_after,
+                    "minimum_amount" => $minimum_amount_after
                 ];
                 $oldstock -> update($data);
+                //buat laporan di product_stock_change
+                $data_stock_change = [
+                    "product_id" => $id,
+                    "amount_before" => $amount_before,
+                    "amount_after" => $amount_after,
+                    "minimum_amount_before" => $minimum_amount_before,
+                    "minimum_amount_after" => $minimum_amount_after
+                ];
+                Product_stock_change::create($data_stock_change);
                 DB::commit();
                 $out  = [
                     "message" => "EditStock - Success",
