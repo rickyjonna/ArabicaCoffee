@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Ingredient;
 use App\Ingredient_stock;
+use App\Ingredient_stock_change;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -121,8 +122,13 @@ class IngredientController extends Controller
                 $amount = $request->input('amount');
                 $minimum_amount = $request->input('minimum_amount');
                 $expired_at = $request->input('expired_at');
-                //updating ingredient
                 $oldingredient = Ingredient::where("id","=",$id);
+                $oldingredientdata = Ingredient::where("id","=",$id)->get();
+                $oldingredientstockdata = Ingredient_stock::where("ingredient_id","=",$id)->get();
+                $amount_before = $oldingredientstockdata->max('amount');
+                $minimum_amount_before = $oldingredientstockdata->max("minimum_amount");
+                $expired_at_before = $oldingredientdata->max('expired_at');
+                //updating ingredient
                 $data = [
                     "merchant_id" => $merchant_id,
                     "name" => $name,
@@ -138,7 +144,18 @@ class IngredientController extends Controller
                     "amount" => $amount,
                     "minimum_amount" => $minimum_amount
                 ];
-                    $oldingredientstock -> update($datastock);
+                $oldingredientstock -> update($datastock);
+                //buat laporan ingredient_stock_change
+                $datalaporan = [
+                    "ingredient_id" => $id,
+                    "amount_before" => $amount_before,
+                    "amount_after" => $amount,
+                    "minimum_amount_before" => $minimum_amount_before,
+                    "minimum_amount_after" => $minimum_amount,
+                    "expired_at_before" => $expired_at_before,
+                    "expired_at_after" => $expired_at,
+                ];
+                Ingredient_stock_change::create($datalaporan);
                 DB::commit();
                 $out  = [
                     "message" => "EditIngredient - Success",
