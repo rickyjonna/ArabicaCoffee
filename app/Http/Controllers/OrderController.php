@@ -18,147 +18,134 @@ use Illuminate\Support\Facades\DB; //pake facades DB
 class OrderController extends Controller
 {
     public function insertorder(Request $request)
-    {
-        if ($request->isMethod('post'))
-        {
-            $validator = Validator::make($request->all(),
-            [
-                'token' => 'required',
-                'merchant_id' => 'required|integer',
-                'product_id' => 'required|array',
-                'amount' => 'required|array',
-                'table_id' => 'nullable|integer',
-                'agent_id' => 'nullable|integer',
-                'information' => 'nullable',
-                'note' => 'nullable'
+{
+    if ($request->isMethod('post')) {
+
+        $validator = Validator::make($request->all(), [
+            'token' => 'required',
+            'merchant_id' => 'required|integer',
+            'product_id' => 'required|array',
+            'amount' => 'required|array',
+            'table_id' => 'nullable|integer',
+            'agent_id' => 'nullable|integer',
+            'information' => 'nullable',
+            'note' => 'nullable'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(["message" => $validator->errors()->first()], 200);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Init
+            $token = $request->input('token');
+            $user_id = User::where('token', $token)->max('id');
+            $merchant_id = $request->input('merchant_id');
+            $table_id = $request->input('table_id');
+            $agent_id = $request->input('agent_id');
+            $information = $request->input('information');
+            $note = $request->input('note');
+            $product_ids = $request->input('product_id');
+            $amounts = $request->input('amount');
+            $product_count = count($product_ids);
+
+            // Simulate total stock requirement
+            $productStockNeeds = [];
+            $ingredientNeeds = [];
+
+            for ($i = 0; $i < $product_count; $i++) {
+                $product = Product::find($product_ids[$i]);
+                $qty = $amounts[$i];
+
+                if ($product->hasstock) {
+                    // Simpan total kebutuhan produk stock
+                    if (!isset($productStockNeeds[$product->id])) {
+                        $productStockNeeds[$product->id] = 0;
+                    }
+                    $productStockNeeds[$product->id] += $qty;
+                }
+
+                if ($product->isformula) {
+                    $formulas = Product_formula::where('product_id', $product->id)->get();
+                    foreach ($formulas as $formula) {
+                        if (!isset($ingredientNeeds[$formula->ingredient_id])) {
+                            $ingredientNeeds[$formula->ingredient_id] = 0;
+                        }
+                        $ingredientNeeds[$formula->ingredient_id] += ($formula->amount * $qty);
+                    }
+                }
+            }
+
+            // Check product stock
+            foreach ($productStockNeeds as $productId => $totalNeed) {
+                $stock = Product_stock::where('product_id', $productId)->value('amount');
+                if ($stock < $totalNeed) {
+                    DB::rollback();
+                    $productName = Product::find($productId)->name ?? 'Produk Tidak Diketahui';
+                    return response()->json(["message" => "Stok tidak mencukupi untuk $productName"], 200);
+                }
+            }
+
+            // Check ingredient stock
+            foreach ($ingredientNeeds as $ingredientId => $totalNeed) {
+                $stock = Ingredient_stock::where('ingredient_id', $ingredientId)->value('amount');
+                if ($stock < $totalNeed) {
+                    DB::rollback();
+                    $ingredientName = Ingredient::find($ingredientId)->name ?? 'Bahan Tidak Diketahui';
+                    return response()->json(["message" => "Bahan tidak mencukupi untuk $ingredientName"], 200);
+                }
+            }
+
+            // Kurangi stok produk
+            foreach ($productStockNeeds as $productId => $totalNeed) {
+                Product_stock::where('product_id', $productId)
+                    ->decrement('amount', $totalNeed);
+            }
+
+            // Kurangi stok bahan
+            foreach ($ingredientNeeds as $ingredientId => $totalNeed) {
+                Ingredient_stock::where('ingredient_id', $ingredientId)
+                    ->decrement('amount', $totalNeed);
+            }
+
+            // Update table status
+            if ($table_id) {
+                Table::where('id', $table_id)->update(['status' => 'NotAvailable']);
+            }
+
+            // Create order
+            $order = Order::create([
+                'merchant_id' => $merchant_id,
+                'table_id' => $table_id,
+                'user_id' => $user_id,
+                'agent_id' => $agent_id,
+                'status' => "OPEN",
+                'information' => $information,
+                'note' => $note
             ]);
-            $messages = $validator->errors();
-            if ($validator->fails())
-            {
-                //request tidak sempurna (ada yang kosong)
-                $out = [
-                    "message" => $messages->first()
-                ];
-                return response()->json($out, 200);
-            };
 
-            DB::beginTransaction();
-            try{
-                //initialize
-                $token = $request->input('token');
-                $user_id = User::where('token','=',$token)->max('id');
-                $merchant_id = $request->input('merchant_id');
-                $table_id = $request->input('table_id');
-                $agent_id = $request->input('agent_id');
-                $information = $request->input('information');
-                $product_id = $request->input('product_id');
-                $product_id_count = count($product_id);
-                $amount = $request->input('amount');
-                $note = $request->input('note');
-
-                //changing table status
-                $newstatus = [
-                    'status' => 'NotAvailable'
-                ];
-                $tablestatus = Table::where('id','=',$table_id)
-                ->update($newstatus);
-
-                //making Order
-                $data = [
+            // Create order list
+            for ($i = 0; $i < $product_count; $i++) {
+                Order_list::create([
+                    'order_id' => $order->id,
                     'merchant_id' => $merchant_id,
-                    'table_id' => $table_id,
+                    'product_id' => $product_ids[$i],
                     'user_id' => $user_id,
-                    'agent_id' => $agent_id,
-                    'status' => "OPEN",
-                    'information' => $information,
-                    'note' => $note
-                ];
-                Order::create($data);
+                    'order_list_status_id' => 1,
+                    'amount' => $amounts[$i]
+                ]);
+            }
 
-                //get the order_id
-                $order_id = Order::max('id');
+            DB::commit();
+            return response()->json(["message" => "Order Telah Dibuat"], 200);
 
-                //checking if product has stock then (-)
-                for($i=0; $i < $product_id_count; $i++){
-                    $product = Product::where('id','=',$product_id[$i])->get();
-                    if($product->max('hasstock') == 1){
-                        //old amount
-                        $product_stock_amount = Product_stock::where('product_id','=',$product_id)->max('amount');
-                        if($product_stock_amount >= $amount[$i]){
-                            //new amount
-                            $newstock = $product_stock_amount - $amount[$i];
-                            $datastock = [
-                                'amount' => $newstock
-                            ];
-                            //updating the stock
-                            Product_stock::where('product_id','=',$product_id)->update($datastock);
-                        } else {
-                            DB::rollback();
-                                $out  = [
-                                    "message" => "Stok Tidak Mencukupi untuk ".$product->name
-                                ];
-                                return response()->json($out,200);
-                        }
-                    } else {
-
-                    };
-                }
-
-                //checking if product has ingredient then (-)
-                for($i=0; $i < $product_id_count; $i++){
-                    $product = Product::where('id','=',$product_id[$i])->first();
-                    if($product->max('isformula') == 1){
-                        $formulas = Product_formula::where('product_id','=',$product_id[$i])->get();
-                        foreach ($formulas as $formula) {
-                            $ingredient = Ingredient::where('id','=',$formula->ingredient_id)->first();
-                            $ingredient_stock = Ingredient_stock::where('ingredient_id','=',$ingredient->id)->first();
-                            if ($ingredient_stock->amount >= ($amount[$i]*$formula->amount)) {
-                                $ingredient_stock_newamount = $ingredient_stock->amount -= ($amount[$i]*$formula->amount);
-                                $data = [
-                                    'amount' => $ingredient_stock_newamount,
-                                ];
-                                Ingredient_stock::where('ingredient_id','=',$ingredient->id)->update($data);
-                            } else {
-                                DB::rollback();
-                                $out  = [
-                                    "message" => "Bahan Tidak Mencukupi untuk ".$product->name
-                                ];
-                                return response()->json($out,200);
-                            }
-                        }
-                    };
-                }
-
-                //making Order list
-                for($i=0; $i < $product_id_count; $i++)
-                {
-                    $data = [
-                        'order_id' => $order_id,
-                        'merchant_id' => $merchant_id,
-                        'product_id' => $product_id[$i],
-                        'user_id' => $user_id,
-                        'order_list_status_id' => 1,
-                        'amount' => $amount[$i]
-                    ];
-                    Order_list::create($data);
-                };
-
-                DB::commit();
-                $out  = [
-                    "message" => "Order Telah Dibuat"
-                ];
-                return response()->json($out,200);
-
-            }catch (\exception $e) { //database tidak bisa diakses
-                DB::rollback();
-                $message = $e->getmessage();
-                $out  = [
-                    "message" => $message
-                ];
-                return response()->json($out,200);
-            };
-        };
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(["message" => $e->getMessage()], 200);
+        }
     }
+}
 
     public function index()
     {
