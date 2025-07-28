@@ -19,5 +19,8 @@ class Order extends Model implements AuthenticatableContract, AuthorizableContra
     protected $hidden = [
 
     ];
-
+    public function orderLists()
+    {
+        return $this->hasMany(Order_list::class);
+    }
 }

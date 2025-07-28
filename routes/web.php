@@ -79,6 +79,7 @@ $router->post("/insertinvoice", "InvoiceController@insertinvoice");
 $router->get("/checkinvoice/{invoice_id}", "InvoiceController@checkinvoice");
 $router->post("/checkout/{invoice_id}", "InvoiceController@checkout");
 $router->delete("/deleteinvoice/{id}", "InvoiceController@destroy");
+$router->get('/invoicetoday', 'InvoiceController@indextoday');
 //income -> terakhir
 $router->get("/listincome", "IncomeController@index");
 $router->delete("/deleteincome/{id}", "IncomeController@destroy");

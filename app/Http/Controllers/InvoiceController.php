@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Invoice;
+use Carbon\Carbon;
 use App\Order;
 use App\Order_list;
 use App\Product;
@@ -200,4 +201,13 @@ class InvoiceController extends Controller
         };
         return response()->json($data, 200);
     }
+
+    public function indextoday() {
+        $today = Carbon::now('Asia/Jakarta')->toDateString();
+        $invoices = Invoice::with('order.orderLists.product')
+        ->whereDate('created_at', $today)
+        ->get();
+        return response()->json($invoices);
+    }
+    
 }//endclass

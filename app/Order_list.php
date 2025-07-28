@@ -21,4 +21,14 @@ class Order_list extends Model implements AuthenticatableContract, AuthorizableC
     protected $hidden = [
         
     ];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id', 'id');
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 }

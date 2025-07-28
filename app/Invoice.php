@@ -20,4 +20,8 @@ class Invoice extends Model implements AuthenticatableContract, AuthorizableCont
         
     ];
 
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 }
