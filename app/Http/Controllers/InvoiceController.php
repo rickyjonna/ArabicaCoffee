@@ -17,86 +17,91 @@ class InvoiceController extends Controller
 {
     public function insertinvoice(Request $request)
     {
-        if ($request->isMethod('post'))
-        {
-            $validator = Validator::make($request->all(),  [
-                'merchant_id' => 'required|integer',
-                'order_id' => 'required|integer',
-                'user_id' => 'required|integer',
-                'payment_id' => 'required|integer',
-                'discount' => 'required|integer',
-                'tax' => 'required|integer',
-                'phone_number' => 'nullable|max:20',
-                'email' => 'nullable|max:20'
-            ]);
-            $messages = $validator->errors();
-            if ($validator->fails())
-            {
-                $out = [
-                    "message" => $messages->first()
-                ];
-                return response()->json($out, 200);
-            };
+        if ($request->isMethod('post')) {
 
-            DB::beginTransaction();
-            try{
-                //initialize
-                $merchant_id = $request->input('merchant_id');
-                $order_id = $request->input('order_id');
-                $user_id = $request->input('user_id');
-                $payment_id = $request->input('payment_id');
-                $discount = $request->input('discount');
-                $tax = $request->input('tax');
-                $phone_number = $request->input('phone_number');
-                $email = $request->input('email');
-                $totalprice = Order_list::where('order_list.order_id','=',$order_id)
-                ->leftjoin('products','products.id','=','order_list.product_id')
+        $validator = Validator::make($request->all(), [
+            'merchant_id' => 'required|integer',
+            'order_id' => 'required|integer',
+            'user_id' => 'required|integer',
+            'payment_id' => 'required|integer',
+            'discount' => 'required|integer',
+            'tax' => 'required|integer',
+            'phone_number' => 'nullable|max:20',
+            'email' => 'nullable|max:20'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "message" => $validator->errors()->first()
+            ], 422);
+        }
+
+        $merchant_id = $request->input('merchant_id');
+        $order_id = $request->input('order_id');
+        $user_id = $request->input('user_id');
+        $payment_id = $request->input('payment_id');
+        $discount = $request->input('discount');
+        $tax = $request->input('tax');
+        $phone_number = $request->input('phone_number');
+        $email = $request->input('email');
+
+        DB::beginTransaction();
+        try {
+            // 🔒 Kunci logika atomik untuk hindari double klik
+            $existing = Invoice::where('order_id', $order_id)
+                ->where('status', 'UNPAID')
+                ->lockForUpdate() // 🔒 lock baris ini selama transaksi
+                ->first();
+
+            if ($existing) {
+                // Hapus invoice UNPAID sebelumnya sebelum buat yang baru
+                $existing->delete();
+            }
+
+            // Hitung total harga dari order list
+            $totalprice = Order_list::where('order_list.order_id', '=', $order_id)
+                ->leftJoin('products', 'products.id', '=', 'order_list.product_id')
                 ->sum(DB::raw('(products.price - (products.price * products.discount / 100)) * order_list.amount'));
 
-                //clearing old invoice
-                $delete_oldinvoice = Invoice::where('order_id','=',$order_id)
-                ->where('status','=','UNPAID')
-                ->delete();
+            $data = [
+                'merchant_id' => $merchant_id,
+                'order_id' => $order_id,
+                'user_id' => $user_id,
+                'payment_id' => $payment_id,
+                'discount' => $discount,
+                'tax' => $tax,
+                'total' => $totalprice,
+                'status' => "UNPAID",
+                'phone_number' => $phone_number,
+                'email' => $email
+            ];
 
-                //making invoice
-                $data = [
-                    'merchant_id' => $merchant_id,
-                    'order_id' => $order_id,
-                    'user_id' => $user_id,
-                    'payment_id' => $payment_id,
-                    'discount' => $discount,
-                    'tax' => $tax,
-                    'total' => $totalprice,
-                    'status' => "UNPAID",
-                    'phone_number' => $phone_number,
-                    'email' => $email
-                ];
-                $insert = Invoice::create($data);
+            $invoice = Invoice::create($data);
+            $invoice_id = $invoice->id;
+            $invoice_total = $totalprice - $discount + $tax;
 
-                //get invoice id
-                $invoice_id =Invoice::max('id');
-                $invoicetotal = $totalprice - $discount + $tax;
-                $results = [
+            DB::commit();
+
+            return response()->json([
+                "message" => "Invoice Berhasil Dibuat",
+                "results" => [
                     "invoice_id" => $invoice_id,
-                    "invoice_total" => $invoicetotal
-                ];
-
-                DB::commit();
-                $out  = [
-                    "message" => "Invoice Berhasil Dibuat",
-                    "results" => $results
-                ];
-                return response()->json($out,200);
-            }catch (\exception $e) { //database tidak bisa diakses
-                DB::rollback();
-                $message = $e->getmessage();
-                $out  = [
-                    "message" => $message
-                ];
-                return response()->json($out,200);
-            };
-        };
+                    "invoice_total" => $invoice_total
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                "message" => "Terjadi kesalahan: " . $e->getMessage()
+            ], 500);
+        }
     }
+
+    return response()->json([
+        "message" => "Metode tidak diizinkan"
+    ], 405);
+}
+
 
     public function checkinvoice($invoice_id)
     {
@@ -142,12 +147,12 @@ class InvoiceController extends Controller
             $updatetablestatus = $table->update($datatable);
 
             //ubah status order
-            // $dataorder = [
-            //     'status' => 'CLOSED'
-            // ];
-            // $order_id = $invoice->max('order_id');
-            // $order = Order::where('id','=',$order_id);
-            // $updateorder = $order->update($dataorder);
+            $dataorder = [
+                'status' => 'CLOSED'
+            ];
+            $order_id = $invoice->max('order_id');
+            $order = Order::where('id','=',$order_id);
+            $updateorder = $order->update($dataorder);
 
             //buat laporan pemasukan
             $merchant_id = $invoice->max('merchant_id');

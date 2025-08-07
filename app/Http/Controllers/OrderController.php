@@ -97,17 +97,17 @@ class OrderController extends Controller
                 }
             }
 
-            // Kurangi stok produk
-            foreach ($productStockNeeds as $productId => $totalNeed) {
-                Product_stock::where('product_id', $productId)
-                    ->decrement('amount', $totalNeed);
-            }
+            // // Kurangi stok produk
+            // foreach ($productStockNeeds as $productId => $totalNeed) {
+            //     Product_stock::where('product_id', $productId)
+            //         ->decrement('amount', $totalNeed);
+            // }
 
-            // Kurangi stok bahan
-            foreach ($ingredientNeeds as $ingredientId => $totalNeed) {
-                Ingredient_stock::where('ingredient_id', $ingredientId)
-                    ->decrement('amount', $totalNeed);
-            }
+            // // Kurangi stok bahan
+            // foreach ($ingredientNeeds as $ingredientId => $totalNeed) {
+            //     Ingredient_stock::where('ingredient_id', $ingredientId)
+            //         ->decrement('amount', $totalNeed);
+            // }
 
             // Update table status
             if ($table_id) {

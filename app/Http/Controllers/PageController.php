@@ -166,42 +166,70 @@ class PageController extends Controller
     {
         //listorder
         $table = Order::leftjoin('tables', 'tables.id', '=', 'orders.table_id')
-        ->where('orders.status', "=", "OPEN")
+        ->join('order_list', 'order_list.order_id', '=', 'orders.id')
+        ->where('order_list_status_id', '!=', 4)
         ->where('orders.agent_id','=',1)
-        ->where('orders.table_id','!=',null)
+        ->whereNotNull('orders.table_id')
         ->OrderBy("orders.id", "ASC")
-        ->addselect('tables.id as table_id')
-        ->addselect('tables.number as table_number','tables.extend as table_extend')
-        ->addselect('orders.id as order_id')
-        ->addselect('orders.note as order_note')
-        ->get();
-        // masih 2 agent
-        $gojek = Order::where('orders.status', "=", "OPEN")
-        ->where('orders.agent_id','=',2)
-        ->leftjoin('agents','agents.id','=','orders.agent_id')
-        ->orderby('orders.id',"ASC")
-        ->addselect('information')
-        ->addselect('orders.id as order_id')
-        ->addselect('orders.note as order_note')
-        ->get();
-        $grab = Order::where('orders.status', "=", "OPEN")
-        ->where('orders.agent_id','=',3)
-        ->leftjoin('agents','agents.id','=','orders.agent_id')
-        ->orderby('orders.id',"ASC")
-        ->addselect('information')
-        ->addselect('orders.id as order_id')
-        ->addselect('orders.note as order_note')
-        ->get();
-        $takeaway = Order::where('orders.status', "=", "OPEN")
-        ->where('orders.agent_id','=',1)
-        ->where('orders.information','!=',null)
-        ->addselect('information')
-        ->addselect('orders.id as order_id')
-        ->addselect('orders.note as order_note')
+        ->select([
+            'tables.id as table_id',
+            'tables.number as table_number',
+            'tables.extend as table_extend',
+            'orders.id as order_id',
+            'orders.note as order_note',
+        ])
+        ->groupBy(
+            'tables.id',
+            'tables.number',
+            'tables.extend',
+            'orders.id',
+            'orders.note'
+        )
         ->get();
 
+        // Gojek Orders (agent_id = 2)
+        $gojek = Order::join('order_list', 'order_list.order_id', '=', 'orders.id')
+        ->where('order_list_status_id', '!=', 4)
+        ->where('orders.agent_id', 2)
+        ->leftJoin('agents', 'agents.id', '=', 'orders.agent_id')
+        ->orderBy('orders.id', 'ASC')
+        ->select([
+            'orders.information',
+            'orders.id as order_id',
+            'orders.note as order_note'
+        ])
+        ->distinct()
+        ->get();
+
+        // Grab Orders (agent_id = 3)
+        $grab = Order::join('order_list', 'order_list.order_id', '=', 'orders.id')
+            ->where('order_list_status_id', '!=', 4)
+            ->where('orders.agent_id', 3)
+            ->leftJoin('agents', 'agents.id', '=', 'orders.agent_id')
+            ->orderBy('orders.id', 'ASC')
+            ->select([
+                'orders.information',
+                'orders.id as order_id',
+                'orders.note as order_note'
+            ])
+            ->distinct()
+            ->get();
+
+        // Takeaway Orders (agent_id = 1, information not null)
+        $takeaway = Order::join('order_list', 'order_list.order_id', '=', 'orders.id')
+            ->where('order_list_status_id', '!=', 4)
+            ->where('orders.agent_id', 1)
+            ->whereNotNull('orders.information')
+            ->select([
+                'orders.information',
+                'orders.id as order_id',
+                'orders.note as order_note'
+            ])
+            ->distinct()
+            ->get();
+
         //productordered list
-        $productordered_list = Order_list::where('order_list.order_list_status_id','=',1) //??
+        $productordered_list = Order_list::where('order_list.order_list_status_id','!=',4) //??
         ->leftjoin('products','products.id','=','order_list.product_id')
         ->select('products.id as product_id','products.name as product_name',DB::raw('SUM(order_list.amount) as product_total'))
         ->groupBy('products.id','products.name')

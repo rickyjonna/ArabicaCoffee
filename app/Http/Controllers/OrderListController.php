@@ -23,8 +23,7 @@ class OrderListController extends Controller //fix discount
         ->leftjoin('products','products.id','=','order_list.product_id')
         ->leftjoin('orders','orders.id','=','order_list.order_id')
         ->leftjoin('tables','tables.id','=','orders.table_id')
-        ->where('orders.status','=','OPEN')
-        ->where('order_list_status_id','=',1)
+        ->where('order_list_status_id','!=',4)
         ->select('products.id as product_id','order_list.id as orderlist_id','orders.id as order_id','tables.id as table_id','tables.number as table_number','tables.extend as table_extend','orders.information as order_information','order_list.amount as total')
         ->get();
 
@@ -133,59 +132,60 @@ class OrderListController extends Controller //fix discount
             'user_id' => 'required|integer',
             'order_list_status_id' => 'required|integer'
         ]);
-        $messages = $validator->errors();
-        if ($validator->fails())
-        {
-            $out = [
-                "message" => $messages->first()
-            ];
-            return response()->json($out, 200);
-        };
+
+        if ($validator->fails()) {
+            return response()->json(["message" => $validator->errors()->first()], 200);
+        }
+
         DB::beginTransaction();
         try {
             $user_id = $request->input('user_id');
-            $order_id = Order_list::where('id','=',$orderlist_id)->max('order_id');
-            $product_id = Order_list::where('id','=',$orderlist_id)->max('product_id');
-            $order_list_amount = Order_list::where('id','=',$orderlist_id)->max('amount');
-            $orderlistlist =  Order_list::where('id','=',$orderlist_id)->first();
+            $new_status_id = $request->input('order_list_status_id');
 
-            if (!$orderlistlist) {
-                $data = [
-                    "message" => "error / data not found"
-                ];
-            } else {
-                //updating status id
-                $order_list_status_id = $request -> input('order_list_status_id');
-                $neworderlistdata = [
-                    'user_id' => $user_id,
-                    'order_list_status_id' => $order_list_status_id
-                ];
-                Order_list::where('id','=',$orderlist_id)->update($neworderlistdata);
+            $orderlist = Order_list::find($orderlist_id);
 
-                //checking other otherlist with same orderid
-                $orderlistnotdone = Order_list::where('order_id','=',$order_id)
-                ->where('order_list_status_id','!=',4)
-                ->first();
-                if(!$orderlistnotdone){
-                    $neworderstatus = [
-                        'status' => 'CLOSED'
-                        ];
-                    Order::where('id','=',$order_id)->update($neworderstatus);
-                };
-            };
+            if (!$orderlist) {
+                return response()->json(["message" => "OrderList not found"], 404);
+            }
+
+            $prev_status_id = $orderlist->order_list_status_id;
+
+            // Update status
+            $orderlist->update([
+                'user_id' => $user_id,
+                'order_list_status_id' => $new_status_id
+            ]);
+
+            // Cek jika baru diubah menjadi status "diproses/done" (id = 4), dan sebelumnya bukan 4
+            if ($new_status_id == 4 && $prev_status_id != 4) {
+                $product = Product::find($orderlist->product_id);
+
+                if ($product) {
+                    $amount = $orderlist->amount;
+
+                    // Kurangi stok produk jika memiliki stok sendiri
+                    if ($product->hasstock) {
+                        Product_stock::where('product_id', $product->id)->decrement('amount', $amount);
+                    }
+
+                    // Kurangi bahan jika produk memiliki formula
+                    if ($product->isformula) {
+                        $formulas = Product_formula::where('product_id', $product->id)->get();
+                        foreach ($formulas as $formula) {
+                            $ingredientNeed = $formula->amount * $amount;
+                            Ingredient_stock::where('ingredient_id', $formula->ingredient_id)->decrement('amount', $ingredientNeed);
+                        }
+                    }
+                }
+            }
+
             DB::commit();
-            $data = [
-                "message" => "OrderList - UpdateStatus - Success"
-            ];
-            return response()->json($data, 200);
-        } catch (\exception $e) {
-            DB::rollback();
-            $message = $e->getmessage();
-            $out  = [
-                "message" => $message
-            ];
-            return response()->json($out,200);
-        };
+            return response()->json(["message" => "OrderList - UpdateStatus - Success"], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(["message" => $e->getMessage()], 500);
+        }
     }
 
     public function updateolsbyproductid(Request $request)
@@ -194,40 +194,56 @@ class OrderListController extends Controller //fix discount
             'user_id' => 'required|integer',
             'product_id' => 'required|integer'
         ]);
-        $messages = $validator->errors();
-        if ($validator->fails())
-        {
-            $out = [
-                "message" => $messages->first()
-            ];
-            return response()->json($out, 200);
-        };
+
+        if ($validator->fails()) {
+            return response()->json(["message" => $validator->errors()->first()], 200);
+        }
+
         DB::beginTransaction();
         try {
-            $product_id = $request->input('product_id');
             $user_id = $request->input('user_id');
-            $neworderlistdata = [
-                "user_id" => $user_id,
-                "order_list_status_id" => 4
-            ];
-            $order_list = Order_list::where('product_id','=',$product_id)
-            ->where('order_list_status_id','=',1)
-            ->update($neworderlistdata);
+            $product_id = $request->input('product_id');
+
+            // Ambil order list yang masih status awal (belum diproses)
+            $orderLists = Order_list::where('product_id', $product_id)
+                ->where('order_list_status_id', '!=', 4) // misal: 1 = pending
+                ->get();
+
+            foreach ($orderLists as $ol) {
+                // Update status order list menjadi done (id = 4)
+                $ol->update([
+                    'user_id' => $user_id,
+                    'order_list_status_id' => 4
+                ]);
+
+                // Kurangi stok produk dan bahan
+                $product = Product::find($ol->product_id);
+                $amount = $ol->amount;
+
+                if ($product) {
+                    if ($product->hasstock) {
+                        Product_stock::where('product_id', $product->id)->decrement('amount', $amount);
+                    }
+
+                    if ($product->isformula) {
+                        $formulas = Product_formula::where('product_id', $product->id)->get();
+                        foreach ($formulas as $formula) {
+                            $ingredientNeed = $formula->amount * $amount;
+                            Ingredient_stock::where('ingredient_id', $formula->ingredient_id)->decrement('amount', $ingredientNeed);
+                        }
+                    }
+                }
+            }
 
             DB::commit();
-            $data = [
-                "message" => "OrderList - UpdateStatusByProductID - Success"
-            ];
-            return response()->json($data, 200);
-        } catch (\exception $e) {
-            DB::rollback();
-            $message = $e->getmessage();
-            $out  = [
-                "message" => $message
-            ];
-            return response()->json($out,200);
-        };
+            return response()->json(["message" => "OrderList - UpdateStatusByProductID - Success"], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(["message" => $e->getMessage()], 500);
+        }
     }
+
 
     public function destroy($id)
     {
