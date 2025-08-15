@@ -15,6 +15,100 @@ use Illuminate\Support\Facades\Validator;
 
 class InvoiceController extends Controller
 {
+    public function index(Request $request)
+    {
+        $perPage    = (int) ($request->input('per_page', 20));
+        $sort       = $request->input('sort', 'newest'); // newest | oldest
+        $startDate  = $request->input('start_date');
+        $endDate    = $request->input('end_date');
+        $search     = $request->input('search');
+        $status     = $request->input('status');
+
+        // Base query untuk list invoice
+        $base = Invoice::query()
+            ->with([
+                'order.orderLists.product:id,name,price'
+            ])
+            ->when($status, fn($q) => $q->where('status', $status))
+            ->when($startDate && $endDate, fn($q) => 
+            $q->whereBetween('invoices.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            )
+            ->when($startDate && !$endDate, fn($q) => 
+                $q->whereDate('invoices.created_at', $startDate)
+            )
+            ->when(!$startDate && $endDate, fn($q) => 
+                $q->whereDate('invoices.created_at', $endDate)
+            )
+            ->when($search, fn($q) => 
+                $q->whereHas('order.orderLists.product', fn($q2) => 
+                    $q2->where('name', 'like', '%'.$search.'%')
+                )
+            );
+
+        // Hitung Total Transaksi & Item Terjual
+        $summaryQuery = (clone $base)
+            ->join('orders', 'orders.id', '=', 'invoices.order_id')
+            ->join('order_list', 'order_list.order_id', '=', 'orders.id')
+            ->join('products', 'products.id', '=', 'order_list.product_id')
+            ->select(DB::raw("
+                COALESCE(SUM(products.price * order_list.amount), 0) AS grand_total,
+                COALESCE(SUM(order_list.amount), 0) AS total_items
+            "))
+            ->without(['order']);
+
+        $summary = $summaryQuery->first();
+        $grandTotal = (int) $summary->grand_total;
+        $totalItems = (int) $summary->total_items;
+
+        // Total invoice sesuai filter (tidak kena pagination)
+        $totalInvoices = (clone $base)->count();
+
+        // Urutkan data
+        $sort === 'oldest' 
+            ? $base->orderBy('created_at', 'asc')
+            : $base->orderBy('created_at', 'desc');
+
+        // Pagination
+        $paginator = $base->simplePaginate($perPage)->appends($request->query());
+
+        // Format data agar sesuai dengan Android
+        $data = [];
+        foreach ($paginator->items() as $invoice) {
+            $order = $invoice->order;
+            $orderListsArray = [];
+            foreach ($order->orderLists as $ol) {
+                $orderListsArray[] = [
+                    'id' => $ol->id,
+                    'amount' => $ol->amount,
+                    'product' => [
+                        'name' => $ol->product->name,
+                        'price' => $ol->product->price
+                    ]
+                ];
+            }
+            $data[] = [
+                'id' => $invoice->id,
+                'total' => $invoice->total,
+                'created_at' => $invoice->created_at->format('Y-m-d H:i:s'),
+                'order' => [
+                    'id' => $order->id,
+                    'order_lists' => $orderListsArray
+                ]
+            ];
+        }
+
+        return response()->json([
+            'status'          => 'success',
+            'total_transaksi' => $grandTotal,
+            'total_items'     => $totalItems,
+            'total_invoices'  => $totalInvoices,
+            'current_page'    => $paginator->currentPage(),
+            'per_page'        => $paginator->perPage(),
+            'next_page_url'   => $paginator->nextPageUrl(),
+            'data'            => $data,
+        ]);
+    }
+    
     public function insertinvoice(Request $request)
     {
         if ($request->isMethod('post')) {

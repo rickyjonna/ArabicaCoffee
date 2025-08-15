@@ -75,6 +75,7 @@ $router->post("/updateorderliststatus/{orderlist_id}", "OrderListController@upda
 $router->post("/updateolsbyproductid", "OrderListController@updateolsbyproductid");
 $router->get("/deleteorderlist/{id}", "OrderListController@destroy");
 //invoice
+$router->get('/invoices', 'InvoiceController@index');
 $router->post("/insertinvoice", "InvoiceController@insertinvoice");
 $router->get("/checkinvoice/{invoice_id}", "InvoiceController@checkinvoice");
 $router->post("/checkout/{invoice_id}", "InvoiceController@checkout");
